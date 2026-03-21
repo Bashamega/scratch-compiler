@@ -1,0 +1,32 @@
+{
+  "name": "scratch-compiler",
+  "version": "0.1.0",
+  "description": "Compile Scratch projects into HTML, JavaScript, and CSS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "scratch-compile": "dist/cli.js"
+  },
+  "scripts": {
+    "start": "tsc && node dist/cli.js"
+  },
+  "keywords": [
+    "scratch",
+    "compiler",
+    "typescript",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "yauzl": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/yauzl": "^2.10.3",
+    "typescript": "^5.4.0"
+  }
+}
