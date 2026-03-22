@@ -81,7 +81,7 @@ async function extractEntry(
 
 function shouldSkipEntry(fileName: string): boolean {
   const lowerCasedFileName = fileName.toLowerCase();
-  return lowerCasedFileName.endsWith(".svg") || lowerCasedFileName.endsWith(".json");
+  return lowerCasedFileName.endsWith(".json");
 }
 
 function openZipFromBuffer(buffer: Buffer): Promise<ZipFile> {
