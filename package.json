@@ -2,16 +2,16 @@
   "name": "scratch-compiler",
   "version": "0.1.0",
   "description": "Compile Scratch projects into HTML, JavaScript, and CSS",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
-  "bin": {
-    "scratch-compile": "dist/cli.js"
-  },
   "scripts": {
-    "start": "tsc && node dist/cli.js"
+    "cli:build": "npm run build -w @scratch-compiler/cli",
+    "cli:start": "npm run start -w @scratch-compiler/cli",
+    "client:build": "npm run build -w @scratch-compiler/client",
+    "client:bundle": "npm run bundle -w @scratch-compiler/client",
+    "client:dev": "npm run dev -w @scratch-compiler/client"
   },
   "keywords": [
     "scratch",
@@ -21,12 +21,7 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "yauzl": "^3.2.1"
-  },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/yauzl": "^2.10.3",
     "typescript": "^5.4.0"
   }
 }
