@@ -6,8 +6,8 @@
     "@scratch-compiler/types": "workspace:*"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/stage.min.js --format=esm --target=es2020",
-    "dev": "esbuild src/index.ts --bundle --sourcemap --outfile=../cli/static/src/stage.min.js --format=esm --watch"
+    "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --target=es2020",
+    "dev": "esbuild src/index.ts --bundle --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --watch"
   },
   "devDependencies": {
     "esbuild": "^0.27.4",

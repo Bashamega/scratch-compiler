@@ -92,8 +92,16 @@ export class Stage {
       return;
     }
 
-    // Draw the image to fill the stage (canvas)
-    this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+    // Draw the image: If it's smaller than the canvas, put it at the top; otherwise fill the canvas
+    if (img.width < this.canvas.width || img.height < this.canvas.height) {
+      // Center horizontally if narrower, stick to top if shorter
+      const x = img.width < this.canvas.width ? (this.canvas.width - img.width) / 2 : 0;
+      const y = 0; // Always top
+      this.ctx.drawImage(img, x, y, img.width, img.height);
+    } else {
+      // Fill the canvas as before
+      this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+    }
 
     this.ctx.globalCompositeOperation = prevComposite;
     this.ctx.restore();
