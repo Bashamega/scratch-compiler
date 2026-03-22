@@ -1,12 +1,12 @@
 // Main Scratch Project type
-interface ScratchProject {
+export interface ScratchProject {
   targets: ScratchTarget[];
   monitors: ScratchMonitor[];
   extensions: string[];
   meta: ScratchMeta;
 }
 
-interface ScratchTarget {
+export interface ScratchTarget {
   isStage: boolean;
   name: string;
   variables: ScratchVariables;
@@ -19,7 +19,6 @@ interface ScratchTarget {
   sounds: ScratchSound[];
   volume: number;
   layerOrder: number;
-  // Sprite-specific properties (optional for Stage)
   visible?: boolean;
   x?: number;
   y?: number;
@@ -27,20 +26,19 @@ interface ScratchTarget {
   direction?: number;
   draggable?: boolean;
   rotationStyle?: string;
-  // Stage-specific properties
   tempo?: number;
   videoTransparency?: number;
   videoState?: string;
   textToSpeechLanguage?: string | null;
 }
 
-type ScratchVariables = Record<string, [string, number]>;
-type ScratchLists = Record<string, unknown>;
-type ScratchBroadcasts = Record<string, unknown>;
-type ScratchBlocks = Record<string, unknown>;
-type ScratchComments = Record<string, unknown>;
+export type ScratchVariables = Record<string, [string, number]>;
+export type ScratchLists = Record<string, unknown>;
+export type ScratchBroadcasts = Record<string, unknown>;
+export type ScratchBlocks = Record<string, unknown>;
+export type ScratchComments = Record<string, unknown>;
 
-interface ScratchCostume {
+export interface ScratchCostume {
   name: string;
   dataFormat: string;
   assetId: string;
@@ -50,7 +48,7 @@ interface ScratchCostume {
   bitmapResolution?: number;
 }
 
-interface ScratchSound {
+export interface ScratchSound {
   name: string;
   assetId: string;
   dataFormat: string;
@@ -60,7 +58,7 @@ interface ScratchSound {
   md5ext: string;
 }
 
-interface ScratchMonitor {
+export interface ScratchMonitor {
   id: string;
   mode: string;
   opcode: string;
@@ -77,7 +75,7 @@ interface ScratchMonitor {
   isDiscrete: boolean;
 }
 
-interface ScratchMeta {
+export interface ScratchMeta {
   semver: string;
   vm: string;
   agent: string;

@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "build": "npm run client:build && npm run cli:build",
     "cli:build": "npm run build -w @scratch-compiler/cli",
     "cli:start": "npm run start -w @scratch-compiler/cli",
     "client:build": "npm run build -w @scratch-compiler/client",

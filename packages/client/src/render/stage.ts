@@ -1,3 +1,5 @@
+import type { ScratchCostume, ScratchTarget } from "@scratch-compiler/types";
+
 export class Stage {
   stage: ScratchTarget;
   currentCostume: ScratchCostume;
@@ -18,7 +20,7 @@ export class Stage {
   }
 
   private async loadImage(costume: ScratchCostume): Promise<HTMLImageElement> {
-    const assetUrl = costume.md5ext;
+    const assetUrl = "./assets/" + costume.md5ext;
 
     // Use assetId as unique key per costume (md5ext can differ by backend but assetId is unique)
     const cacheKey = `${costume.assetId}:${costume.dataFormat}`;
@@ -98,9 +100,9 @@ export class Stage {
   }
 
   async change(id: string): Promise<void> {
-    const costome = this.stage.costumes.filter(c=> c.assetId === id)[0];
-    if(!costome) throw new Error("This custome doesn't exist");
-    this.currentCostume = costome;
+    const costume = this.stage.costumes.find((c) => c.assetId === id);
+    if (!costume) throw new Error("This costume doesn't exist");
+    this.currentCostume = costume;
     await this.render();
   }
 }

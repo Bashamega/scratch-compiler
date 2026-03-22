@@ -11,6 +11,7 @@
     "start": "node dist/cli.js"
   },
   "dependencies": {
+    "@scratch-compiler/types": "*",
     "yauzl": "^3.2.1"
   },
   "devDependencies": {
