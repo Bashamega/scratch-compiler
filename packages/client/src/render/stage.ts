@@ -1,10 +1,15 @@
 import type { ScratchCostume, ScratchTarget } from "@scratch-compiler/types";
 
+const SCRATCH_STAGE_WIDTH = 480;
+const SCRATCH_STAGE_HEIGHT = 360;
+
 export class Stage {
   stage: ScratchTarget;
   currentCostume: ScratchCostume;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
+  readonly logicalWidth: number;
+  readonly logicalHeight: number;
 
   // Static image cache: assetUrl -> Promise<HTMLImageElement>
   private static imageCache: Map<string, Promise<HTMLImageElement>> = new Map();
@@ -17,6 +22,18 @@ export class Stage {
     const ctx = this.canvas.getContext("2d");
     if (!ctx) throw new Error("Could not get 2D rendering context for Stage");
     this.ctx = ctx;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.logicalWidth = SCRATCH_STAGE_WIDTH;
+    this.logicalHeight = SCRATCH_STAGE_HEIGHT;
+
+    if (dpr > 1) {
+      this.canvas.width = SCRATCH_STAGE_WIDTH * dpr;
+      this.canvas.height = SCRATCH_STAGE_HEIGHT * dpr;
+      this.canvas.style.width = SCRATCH_STAGE_WIDTH + "px";
+      this.canvas.style.height = SCRATCH_STAGE_HEIGHT + "px";
+      this.ctx.scale(dpr, dpr);
+    }
   }
 
   private async loadImage(costume: ScratchCostume): Promise<HTMLImageElement> {
@@ -93,14 +110,14 @@ export class Stage {
     }
 
     // Draw the image: If it's smaller than the canvas, put it at the top; otherwise fill the canvas
-    if (img.width < this.canvas.width || img.height < this.canvas.height) {
-      // Center horizontally if narrower, stick to top if shorter
-      const x = img.width < this.canvas.width ? (this.canvas.width - img.width) / 2 : 0;
-      const y = 0; // Always top
+    const w = this.logicalWidth;
+    const h = this.logicalHeight;
+    if (img.width < w || img.height < h) {
+      const x = img.width < w ? (w - img.width) / 2 : 0;
+      const y = 0;
       this.ctx.drawImage(img, x, y, img.width, img.height);
     } else {
-      // Fill the canvas as before
-      this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(img, 0, 0, w, h);
     }
 
     this.ctx.globalCompositeOperation = prevComposite;

@@ -83,17 +83,11 @@ if (!stageTarget) {
     Promise.all(imagePromises).then(function() {
       // All images loaded, start render loop
       function renderLoop() {
-        // Clear canvas each frame
-        stage.ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Render stage
+        stage.ctx.clearRect(0, 0, stage.logicalWidth, stage.logicalHeight);
         stage.render();
-
-        // Render sprites
         for (var k = 0; k < sprites.length; k++) {
-          sprites[k].draw(stage.ctx);
+          sprites[k].draw(stage.ctx, stage.logicalWidth, stage.logicalHeight);
         }
-
         requestAnimationFrame(renderLoop);
       }
 

@@ -10,7 +10,7 @@ export class Sprite {
     // Load all costumes as images
     this.data.costumes.forEach(costume => {
       const img = new Image();
-      img.src = `assets/${costume.md5ext}`; // point to your asset folder
+      img.src = `./assets/${costume.md5ext}`;
       this.images.push(img);
     });
   }
@@ -20,19 +20,21 @@ export class Sprite {
    *   - (0,0) is center of the canvas
    *   - +y is up, +x is right
    * Renders correctly regardless of canvas size.
-   * 
-   * @param ctx HTML CanvasRenderingContext2D to draw to.
+   *
+   * @param ctx HTML CanvasRenderingContext2D to draw to (should be scaled for DPR).
+   * @param logicalWidth Logical canvas width (e.g. 480).
+   * @param logicalHeight Logical canvas height (e.g. 360).
    */
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, logicalWidth: number, logicalHeight: number) {
     if (!this.data.visible) return;
     const currentCostumeIdx = this.data.currentCostume ?? 0;
     const costume = this.images[currentCostumeIdx];
     if (!costume?.complete) return;
-  
+
     ctx.save();
-  
-    const canvasWidth = ctx.canvas.width;
-    const canvasHeight = ctx.canvas.height;
+
+    const canvasWidth = logicalWidth;
+    const canvasHeight = logicalHeight;
   
     const x = this.data.x ?? 0;
     const y = this.data.y ?? 0;
