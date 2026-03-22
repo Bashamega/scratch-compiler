@@ -2,6 +2,7 @@ import type { ScratchProject, ScratchTarget } from "@scratch-compiler/types";
 import { copyFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { fromBuffer, Entry, ZipFile } from "yauzl";
+import { minify } from "./minify";
 
 /**
  * Copies all files and subdirectories from the 'static' directory to the provided output directory.
@@ -23,7 +24,7 @@ export async function migrate(
 
   const mainJsPath = join(outputDirectory, "src", "main.js");
 
-  const mainJsContent = generateMainJs(projectJsonContent);
+  const mainJsContent = await generateMainJs(projectJsonContent);
 
   await writeFile(mainJsPath, mainJsContent, "utf-8");
 }
@@ -31,10 +32,12 @@ export async function migrate(
 /**
  * Generates main.js that imports Stage from the client bundle and renders the project.
  */
-function generateMainJs(project: ScratchProject) {
-  const stageTarget = project.targets?.find((t): t is ScratchTarget => t.isStage);
+async function generateMainJs(project: ScratchProject) {
+  const stageTarget = project.targets?.find(
+    (t): t is ScratchTarget => t.isStage,
+  );
   const targetJson = JSON.stringify(stageTarget ?? null, null, 2);
-  return `import { Stage } from "./stage.min.js";
+  const content = `import { Stage } from "./stage.min.js";
 
 const stageTarget = ${targetJson};
 
@@ -50,6 +53,7 @@ if (!stageTarget) {
   }
 }
 `;
+  return await minify(content);
 }
 
 async function extractProjectJson(data: Buffer): Promise<Buffer> {
