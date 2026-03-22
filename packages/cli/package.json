@@ -1,0 +1,22 @@
+{
+  "name": "@scratch-compiler/cli",
+  "version": "0.1.0",
+  "description": "SB3 asset extraction tool",
+  "main": "dist/cli.js",
+  "bin": {
+    "scratch-compile": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@scratch-compiler/types": "workspace:*",
+    "yauzl": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/yauzl": "^2.10.3",
+    "typescript": "^5.4.0"
+  }
+}

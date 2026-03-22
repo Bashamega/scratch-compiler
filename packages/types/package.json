@@ -1,0 +1,12 @@
+{
+  "name": "@scratch-compiler/types",
+  "version": "0.1.0",
+  "description": "Shared Scratch type definitions",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
