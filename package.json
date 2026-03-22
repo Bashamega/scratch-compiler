@@ -3,16 +3,14 @@
   "version": "0.1.0",
   "description": "Compile Scratch projects into HTML, JavaScript, and CSS",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
-    "build": "npm run client:build && npm run cli:build",
-    "cli:build": "npm run build -w @scratch-compiler/cli",
-    "cli:start": "npm run start -w @scratch-compiler/cli",
-    "client:build": "npm run build -w @scratch-compiler/client",
-    "client:bundle": "npm run bundle -w @scratch-compiler/client",
-    "client:dev": "npm run dev -w @scratch-compiler/client"
+    "build": "pnpm run client:build && pnpm run cli:build",
+    "cli:build": "pnpm --filter @scratch-compiler/cli run build",
+    "cli:start": "pnpm --filter @scratch-compiler/cli run start",
+    "client:build": "pnpm --filter @scratch-compiler/client run build",
+    "client:bundle": "pnpm --filter @scratch-compiler/client run build",
+    "client:dev": "pnpm --filter @scratch-compiler/client run dev"
   },
   "keywords": [
     "scratch",

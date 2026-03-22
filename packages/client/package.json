@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Scratch runtime for the browser",
   "dependencies": {
-    "@scratch-compiler/types": "*"
+    "@scratch-compiler/types": "workspace:*"
   },
   "scripts": {
     "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/stage.min.js --format=esm --target=es2020",
