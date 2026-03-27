@@ -41,93 +41,59 @@ export class Stage {
 
     // Use assetId as unique key per costume (md5ext can differ by backend but assetId is unique)
     const cacheKey = `${costume.assetId}:${costume.dataFormat}`;
+    if (Stage.imageCache.has(cacheKey)) return Stage.imageCache.get(cacheKey)!;
 
-    if (Stage.imageCache.has(cacheKey)) {
-      // Return cached (promise resolves when image is ready)
-      return Stage.imageCache.get(cacheKey)!;
-    }
-
-    // Not cached, need to fetch and create Image.
-    let loadPromise: Promise<HTMLImageElement>;
-    if (costume.dataFormat === 'svg') {
-      loadPromise = (async () => {
-        try {
-          const response = await fetch(assetUrl);
-          const svgText = await response.text();
-          const svgBase64 = btoa(unescape(encodeURIComponent(svgText)));
-          const img = new window.Image();
-          img.src = `data:image/svg+xml;base64,${svgBase64}`;
-          await new Promise((res, rej) => {
-            img.onload = res;
-            img.onerror = rej;
-          });
-          return img;
-        } catch (e) {
-          throw new Error(`Failed to load SVG costume asset: ${assetUrl}, ${e}`);
-        }
+    let promise: Promise<HTMLImageElement>;
+    if (costume.dataFormat === "svg") {
+      promise = (async () => {
+        const response = await fetch(assetUrl);
+        const svgText = await response.text();
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgText)));
+        const img = new Image();
+        img.src = `data:image/svg+xml;base64,${svgBase64}`;
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+        return img;
       })();
     } else {
-      loadPromise = (async () => {
-        const img = new window.Image();
+      promise = (async () => {
+        const img = new Image();
         img.src = assetUrl;
-        await new Promise((res, rej) => {
-          img.onload = res;
-          img.onerror = rej;
-        });
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
         return img;
       })();
     }
 
-    // Store promise in cache so concurrent requests share it.
-    Stage.imageCache.set(cacheKey, loadPromise);
-
-    // If it fails, remove from cache so retries work.
-    loadPromise.catch(() => {
-      Stage.imageCache.delete(cacheKey);
-    });
-
-    return loadPromise;
+    Stage.imageCache.set(cacheKey, promise);
+    promise.catch(() => Stage.imageCache.delete(cacheKey));
+    return promise;
   }
 
-  async render(): Promise<void> {
-    if (!this.currentCostume) {
-      console.warn("No costume to render.");
-      return;
-    }
-
-    this.ctx.save();
-    const prevComposite = this.ctx.globalCompositeOperation;
-    this.ctx.globalCompositeOperation = "destination-over";
-
-    let img: HTMLImageElement;
-    try {
-      img = await this.loadImage(this.currentCostume);
-    } catch (e) {
-      console.warn(e);
-      this.ctx.globalCompositeOperation = prevComposite;
-      this.ctx.restore();
-      return;
-    }
-
-    // Draw the image: If it's smaller than the canvas, put it at the top; otherwise fill the canvas
-    const w = this.logicalWidth;
-    const h = this.logicalHeight;
-    if (img.width < w || img.height < h) {
+  /** Kid-friendly draw: draws immediately if possible, otherwise auto on image load */
+  draw() {
+    if (!this.currentCostume) return;
+  
+    this.loadImage(this.currentCostume).then((img) => {
+      const ctx = this.ctx;
+      ctx.save();
+      const prevComposite = ctx.globalCompositeOperation;
+      ctx.globalCompositeOperation = "destination-over";
+  
+      const w = this.logicalWidth;
+      const h = this.logicalHeight;
+  
+      // center smaller images
       const x = img.width < w ? (w - img.width) / 2 : 0;
-      const y = 0;
-      this.ctx.drawImage(img, x, y, img.width, img.height);
-    } else {
-      this.ctx.drawImage(img, 0, 0, w, h);
-    }
-
-    this.ctx.globalCompositeOperation = prevComposite;
-    this.ctx.restore();
+      ctx.drawImage(img, x, 0, img.width, img.height);
+  
+      ctx.globalCompositeOperation = prevComposite;
+      ctx.restore();
+    }).catch(console.warn);
   }
 
   async change(id: string): Promise<void> {
     const costume = this.stage.costumes.find((c) => c.assetId === id);
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
-    await this.render();
+    this.draw(); // auto draw after change
   }
 }

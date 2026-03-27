@@ -105,9 +105,10 @@ function generateSpritesCtorCode(sprites: ScratchTarget[]): string {
       );
       // You could add more optional fields as needed here
 
-      return `  new Sprite({ ${objFields.join(", ")} })`;
+      return `const ${sprite.name} = new Sprite({ ${objFields.join(", ")} }); 
+      ${sprite.name}.draw(ctx, width, height);`;
     })
-    .join(",\n");
+    .join("\n");
 }
 
 /** Generate the code string for a costumes array. */
@@ -143,40 +144,14 @@ function composeMainJsSource(
   
   // Make the stage
   const myStage = ${stageCtorCode};
-  
-  // Make the sprites
-  const mySprites = [
-  ${spritesCtorCode}
-  ];
-  
+  myStage.draw();
   // Cache frequently used references
   const ctx = myStage.ctx;
   const width = myStage.logicalWidth;
   const height = myStage.logicalHeight;
   
-  // Safe render loop
-  function draw() {
-    try {
-      // Render stage (engine handles FPS and async safely)
-      myStage.render();
-  
-      // Draw sprites safely
-      for (const sprite of mySprites) {
-        if (!sprite) continue;
-        if (sprite.visible === false) continue;
-  
-        sprite.draw(ctx, width, height);
-      }
-    } catch (err) {
-      // Never crash the animation loop
-      console.error("Runtime error:", err);
-    }
-  
-    requestAnimationFrame(draw);
-  }
-  
-  // Start animation loop
-  requestAnimationFrame(draw);
+  // Make the sprites
+  ${spritesCtorCode}
   `;
 }
 
