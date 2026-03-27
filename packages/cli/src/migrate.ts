@@ -1,13 +1,16 @@
-import type { ScratchProject, ScratchTarget } from "@scratch-compiler/types";
+import type {
+  ScratchCostume,
+  ScratchProject,
+  ScratchTarget,
+} from "@scratch-compiler/types";
 import { copyFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { fromBuffer, Entry, ZipFile } from "yauzl";
-import { minify } from "./minify";
+import { formatJsString } from "./format";
 
 /**
- * Copies all files and subdirectories from the 'static' directory to the provided output directory.
- *
- * @param outputDirectory Path to the output directory
+ * Migrates a Scratch project by copying static assets, extracting project.json,
+ * generating main.js, and saving it into the output directory.
  */
 export async function migrate(
   outputDirectory: string,
@@ -19,87 +22,165 @@ export async function migrate(
   // Extract ONLY project.json
   const projectJsonBuffer = await extractProjectJson(data);
 
-  // Convert to string (JSON text)
-  const projectJsonContent = JSON.parse(projectJsonBuffer.toString("utf-8"));
+  // Parse the project JSON
+  const projectJsonContent = parseProjectJson(projectJsonBuffer);
 
+  // Generate and write main.js
+  await writeMainJsFile(outputDirectory, projectJsonContent);
+}
+
+/** Extract and parse project.json buffer from zip data. */
+function parseProjectJson(buffer: Buffer): ScratchProject {
+  return JSON.parse(buffer.toString("utf-8"));
+}
+
+/** Generate and write main.js to the output directory. */
+async function writeMainJsFile(
+  outputDirectory: string,
+  project: ScratchProject,
+): Promise<void> {
   const mainJsPath = join(outputDirectory, "src", "main.js");
-
-  const mainJsContent = await generateMainJs(projectJsonContent);
-
-  await writeFile(mainJsPath, mainJsContent, "utf-8");
+  const mainJsContent = generateMainJs(project);
+  const formatted = await formatJsString(mainJsContent);
+  await writeFile(mainJsPath, formatted, "utf-8");
 }
 
 /**
- * Generates main.js that imports Stage from the client bundle and renders the project.
+ * Generates a simple main.js that loads the project into the canvas using Stage and Sprite.
+ * The generated JS is easy to read and understand for kids.
  */
-async function generateMainJs(project: ScratchProject) {
-  const stageTarget = project.targets?.find(
-    (t): t is ScratchTarget => t.isStage,
-  );
-  const sprites = project.targets?.filter((t) => !t.isStage) ?? [];
+function generateMainJs(project: ScratchProject) {
+  const stageTarget = findStageTarget(project);
+  const stageCtorCode = generateStageCtorCode(stageTarget);
+  const sprites = findSprites(project);
+  const spritesCtorCode = generateSpritesCtorCode(sprites);
 
-  const stageJson = JSON.stringify(stageTarget ?? null, null, 2);
-  const spritesJson = JSON.stringify(sprites, null, 2);
+  return composeMainJsSource(stageCtorCode, spritesCtorCode);
+}
 
-  const content = `
-import { Stage, Sprite } from "./engine.min.js";
+/** Find the stage target in the project. */
+function findStageTarget(project: ScratchProject): ScratchTarget | undefined {
+  return project.targets?.find((t): t is ScratchTarget => t.isStage);
+}
 
-const stageTarget = ${stageJson};
-const spriteTargets = ${spritesJson};
+/** Find all sprite targets in the project. */
+function findSprites(project: ScratchProject): ScratchTarget[] {
+  return project.targets?.filter((t): t is ScratchTarget => !t.isStage) ?? [];
+}
 
-if (!stageTarget) {
-  console.error("No stage found in project");
-} else {
+/** Generate the code string for the Stage constructor. */
+function generateStageCtorCode(stageTarget?: ScratchTarget): string {
+  if (!stageTarget) return "null";
+  const costumesCode = generateCostumesArrayCode(stageTarget.costumes ?? []);
+
+  // Add all fields as object properties, using JSON.stringify for string values, and default values as appropriate.
+  const objFields: string[] = [];
+  objFields.push(`name: ${JSON.stringify(stageTarget.name)}`);
+  objFields.push(`costumes: [${costumesCode}]`);
+  objFields.push(`isStage: true`);
+  // Add any other relevant properties here for Stage
+
+  return `new Stage({ ${objFields.join(", ")} }, canvas)`;
+}
+
+/** Generate the code string for all Sprite constructors. */
+function generateSpritesCtorCode(sprites: ScratchTarget[]): string {
+  return sprites
+    .map((sprite) => {
+      const costumesCode = generateCostumesArrayCode(sprite.costumes ?? []);
+      // Add all sprite properties as object fields
+      const objFields: string[] = [];
+      objFields.push(`name: ${JSON.stringify(sprite.name)}`);
+      objFields.push(`costumes: [${costumesCode}]`);
+      objFields.push(`x: ${typeof sprite.x === "number" ? sprite.x : 0}`);
+      objFields.push(`y: ${typeof sprite.y === "number" ? sprite.y : 0}`);
+      objFields.push(
+        `visible: ${typeof sprite.visible === "boolean" ? sprite.visible : true}`,
+      );
+      objFields.push(
+        `direction: ${typeof sprite.direction === "number" ? sprite.direction : 90}`,
+      );
+      objFields.push(
+        `size: ${typeof sprite.size === "number" ? sprite.size : 100}`,
+      );
+      // You could add more optional fields as needed here
+
+      return `  new Sprite({ ${objFields.join(", ")} })`;
+    })
+    .join(",\n");
+}
+
+/** Generate the code string for a costumes array. */
+function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
+  return costumes
+    .map(
+      (costume) =>
+        `{
+  name: ${JSON.stringify(costume.name)},
+  assetId: ${JSON.stringify(costume.assetId)},
+  md5ext: ${JSON.stringify(costume.md5ext)},
+  dataFormat: ${JSON.stringify(costume.dataFormat)}
+}`,
+    )
+    .join(", ");
+}
+
+/** Compose the contents of main.js */
+function composeMainJsSource(
+  stageCtorCode: string,
+  spritesCtorCode: string,
+): string {
+  return `
+  import { Stage, Sprite } from "./engine.min.js";
+  
+  // Get the drawing canvas
   const canvas = document.getElementById("sb3-canvas");
+  
+  // Check if the canvas exists before continuing
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
-    console.error("Canvas #sb3-canvas not found");
-  } else {
-    const stage = new Stage(stageTarget, canvas);
-    const sprites = spriteTargets.map(function(data) { return new Sprite(data); });
-
-    // Wait for all sprite images to load
-    var imagePromises = [];
-    for (var i = 0; i < sprites.length; i++) {
-      var sprite = sprites[i];
-      for (var j = 0; j < sprite.images.length; j++) {
-        (function(img) {
-          imagePromises.push(
-            new Promise(function(resolve) {
-              if (img.complete) {
-                resolve();
-              } else {
-                img.onload = function() { resolve(); };
-                img.onerror = function() {
-                  console.error("Failed to load image");
-                  resolve();
-                };
-              }
-            })
-          );
-        })(sprite.images[j]);
-      }
-    }
-
-    Promise.all(imagePromises).then(function() {
-      // All images loaded, start render loop
-      function renderLoop() {
-        stage.ctx.clearRect(0, 0, stage.logicalWidth, stage.logicalHeight);
-        stage.render();
-        for (var k = 0; k < sprites.length; k++) {
-          sprites[k].draw(stage.ctx, stage.logicalWidth, stage.logicalHeight);
-        }
-        requestAnimationFrame(renderLoop);
-      }
-
-      requestAnimationFrame(renderLoop);
-    });
+    throw new Error("Canvas with id 'sb3-canvas' was not found!");
   }
-}
+  
+  // Make the stage
+  const myStage = ${stageCtorCode};
+  
+  // Make the sprites
+  const mySprites = [
+  ${spritesCtorCode}
+  ];
+  
+  // Cache frequently used references
+  const ctx = myStage.ctx;
+  const width = myStage.logicalWidth;
+  const height = myStage.logicalHeight;
+  
+  // Safe render loop
+  function draw() {
+    try {
+      // Render stage (engine handles FPS and async safely)
+      myStage.render();
+  
+      // Draw sprites safely
+      for (const sprite of mySprites) {
+        if (!sprite) continue;
+        if (sprite.visible === false) continue;
+  
+        sprite.draw(ctx, width, height);
+      }
+    } catch (err) {
+      // Never crash the animation loop
+      console.error("Runtime error:", err);
+    }
+  
+    requestAnimationFrame(draw);
+  }
+  
+  // Start animation loop
+  requestAnimationFrame(draw);
   `;
-
-  return await minify(content);
 }
 
+/** Extracts the project.json file from the provided Scratch .sb3 Buffer archive. */
 async function extractProjectJson(data: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     fromBuffer(
@@ -153,6 +234,7 @@ async function extractProjectJson(data: Buffer): Promise<Buffer> {
   });
 }
 
+/** Recursively copies a directory and its contents. */
 async function copyDirectory(src: string, dest: string): Promise<void> {
   await mkdir(dest, { recursive: true });
   const entries = await readdir(src, { withFileTypes: true });

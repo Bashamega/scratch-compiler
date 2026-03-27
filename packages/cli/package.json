@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@scratch-compiler/types": "workspace:*",
+    "prettier": "^3.8.1",
     "yauzl": "^3.2.1"
   },
   "devDependencies": {
