@@ -123,6 +123,7 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
   dataFormat: ${JSON.stringify(costume.dataFormat)},
   rotationCenterX: ${typeof costume.rotationCenterX === "number" ? costume.rotationCenterX : "undefined"},
   rotationCenterY: ${typeof costume.rotationCenterY === "number" ? costume.rotationCenterY : "undefined"},
+  bitmapResolution: ${typeof costume.bitmapResolution === "number" ? costume.bitmapResolution : "undefined"},
 }`,
     )
     .join(", ");

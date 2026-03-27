@@ -1,7 +1,5 @@
 import type { ScratchCostume, ScratchTarget } from "@scratch-compiler/types";
-
-const SCRATCH_STAGE_WIDTH = 480;
-const SCRATCH_STAGE_HEIGHT = 360;
+import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
 
 export class Stage {
   stage: ScratchTarget;
@@ -27,13 +25,13 @@ export class Stage {
     this.logicalWidth = SCRATCH_STAGE_WIDTH;
     this.logicalHeight = SCRATCH_STAGE_HEIGHT;
 
-    if (dpr > 1) {
-      this.canvas.width = SCRATCH_STAGE_WIDTH * dpr;
-      this.canvas.height = SCRATCH_STAGE_HEIGHT * dpr;
-      this.canvas.style.width = SCRATCH_STAGE_WIDTH + "px";
-      this.canvas.style.height = SCRATCH_STAGE_HEIGHT + "px";
-      this.ctx.scale(dpr, dpr);
-    }
+    this.canvas.width = SCRATCH_STAGE_WIDTH * dpr;
+    this.canvas.height = SCRATCH_STAGE_HEIGHT * dpr;
+    this.canvas.style.width = SCRATCH_STAGE_WIDTH + "px";
+    this.canvas.style.height = SCRATCH_STAGE_HEIGHT + "px";
+    this.ctx.scale(dpr, dpr);
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = "high";
   }
 
   private async loadImage(costume: ScratchCostume): Promise<HTMLImageElement> {
@@ -83,8 +81,9 @@ export class Stage {
 
       // Use rotationCenterX/Y to position the image correctly
       const costume = this.currentCostume;
-      const centerX = costume.rotationCenterX ?? img.width / 2;
-      const centerY = costume.rotationCenterY ?? img.height / 2;
+      const bitmapResolution = costume.bitmapResolution ?? 1;
+      const centerX = (costume.rotationCenterX ?? img.width / 2) / bitmapResolution;
+      const centerY = (costume.rotationCenterY ?? img.height / 2) / bitmapResolution;
 
       // Place the rotation center of the costume at the center of the stage
       const stageCenterX = w / 2;
@@ -92,7 +91,10 @@ export class Stage {
       const drawX = stageCenterX - centerX;
       const drawY = stageCenterY - centerY;
 
-      ctx.drawImage(img, drawX, drawY, img.width, img.height);
+      const drawWidth = img.width / bitmapResolution;
+      const drawHeight = img.height / bitmapResolution;
+
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
 
       ctx.globalCompositeOperation = prevComposite;
       ctx.restore();

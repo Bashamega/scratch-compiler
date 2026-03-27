@@ -1,0 +1,2 @@
+export const SCRATCH_STAGE_WIDTH = 480;
+export const SCRATCH_STAGE_HEIGHT = 360;
