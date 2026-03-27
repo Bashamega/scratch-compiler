@@ -80,11 +80,20 @@ export class Stage {
   
       const w = this.logicalWidth;
       const h = this.logicalHeight;
-  
-      // center smaller images
-      const x = img.width < w ? (w - img.width) / 2 : 0;
-      ctx.drawImage(img, x, 0, img.width, img.height);
-  
+
+      // Use rotationCenterX/Y to position the image correctly
+      const costume = this.currentCostume;
+      const centerX = costume.rotationCenterX ?? img.width / 2;
+      const centerY = costume.rotationCenterY ?? img.height / 2;
+
+      // Place the rotation center of the costume at the center of the stage
+      const stageCenterX = w / 2;
+      const stageCenterY = h / 2;
+      const drawX = stageCenterX - centerX;
+      const drawY = stageCenterY - centerY;
+
+      ctx.drawImage(img, drawX, drawY, img.width, img.height);
+
       ctx.globalCompositeOperation = prevComposite;
       ctx.restore();
     }).catch(console.warn);

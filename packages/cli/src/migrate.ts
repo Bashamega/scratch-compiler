@@ -120,7 +120,9 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
   name: ${JSON.stringify(costume.name)},
   assetId: ${JSON.stringify(costume.assetId)},
   md5ext: ${JSON.stringify(costume.md5ext)},
-  dataFormat: ${JSON.stringify(costume.dataFormat)}
+  dataFormat: ${JSON.stringify(costume.dataFormat)},
+  rotationCenterX: ${typeof costume.rotationCenterX === "number" ? costume.rotationCenterX : "undefined"},
+  rotationCenterY: ${typeof costume.rotationCenterY === "number" ? costume.rotationCenterY : "undefined"},
 }`,
     )
     .join(", ");
