@@ -42,6 +42,9 @@ importers:
       '@scratch-compiler/types':
         specifier: workspace:*
         version: link:../types
+      konva:
+        specifier: ^10.2.3
+        version: 10.2.3
     devDependencies:
       esbuild:
         specifier: ^0.27.4
@@ -228,6 +231,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  konva@10.2.3:
+    resolution: {integrity: sha512-NDGeIxm2nsQcp6oqZKS9T764JEi53RpQvpUxV2EK7Awm49fwdd1+EB1Nq1nyspRc0hOAKyKssoTFvPaKwiSUog==}
+
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
 
@@ -366,6 +372,8 @@ snapshots:
       '@esbuild/win32-arm64': 0.27.4
       '@esbuild/win32-ia32': 0.27.4
       '@esbuild/win32-x64': 0.27.4
+
+  konva@10.2.3: {}
 
   pend@1.2.0: {}
 

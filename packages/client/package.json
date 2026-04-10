@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "Scratch runtime for the browser",
   "dependencies": {
-    "@scratch-compiler/types": "workspace:*"
+    "@scratch-compiler/types": "workspace:*",
+    "konva": "^10.2.3"
   },
   "scripts": {
     "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --target=es2020",

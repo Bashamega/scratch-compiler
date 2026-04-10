@@ -1,17 +1,24 @@
 import type { ScratchTarget } from "@scratch-compiler/types";
 import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
+import type { Stage } from "./stage";
+import { Image as KonvaImage } from "konva/lib/shapes/Image";
 
 export class Sprite {
   data: ScratchTarget;
   images: HTMLImageElement[] = [];
+  konvaNode: KonvaImage;
   private isReady = false;
   private ready: Promise<void>;
 
   constructor(data: ScratchTarget) {
     this.data = data;
+    this.konvaNode = new KonvaImage({
+      name: data.name,
+      image: new Image()
+    });
 
     // Load all costumes and track when all are ready
-    const promises = this.data.costumes.map((costume) => {
+    const promises = this.data.costumes.map((costume, index) => {
       const img = new Image();
       img.src = `./assets/${costume.md5ext}`;
       this.images.push(img);
@@ -29,28 +36,28 @@ export class Sprite {
   }
 
   /** Draws the sprite, waits for images if needed */
-  draw(
-    ctx: CanvasRenderingContext2D,
-    canvasWidth: number,
-    canvasHeight: number,
-  ) {
+  draw(stage: Stage) {
     if (this.isReady) {
-      this.performDraw(ctx, canvasWidth, canvasHeight);
+      this.performDraw(stage);
     } else {
       this.ready
         .then(() => {
-          this.performDraw(ctx, canvasWidth, canvasHeight);
+          this.performDraw(stage);
         })
         .catch(console.error);
     }
   }
 
-  private performDraw(
-    ctx: CanvasRenderingContext2D,
-    canvasWidth: number,
-    canvasHeight: number,
-  ) {
-    if (!this.data.visible) return;
+  private performDraw(stage: Stage) {
+    if (!this.konvaNode.getParent()) {
+      stage.spriteLayer.add(this.konvaNode);
+    }
+
+    if (!this.data.visible) {
+      this.konvaNode.visible(false);
+      stage.spriteLayer.batchDraw();
+      return;
+    }
 
     const idx = this.data.currentCostume ?? 0;
     const image = this.images[idx];
@@ -66,24 +73,10 @@ export class Sprite {
     const bitmapResolution = costume.bitmapResolution ?? 1;
 
     // --------------------------
-    // Stage scaling (optional)
-    // Only scale if canvas size != 480x360
-    // --------------------------
-    const stageScale = Math.min(
-      canvasWidth / SCRATCH_STAGE_WIDTH,
-      canvasHeight / SCRATCH_STAGE_HEIGHT,
-    );
-
-    // --------------------------
-    // Final sprite scale
-    // --------------------------
-    const scale = (size / 100) * stageScale;
-
-    // --------------------------
     // Scratch coordinates -> canvas
     // --------------------------
-    const canvasX = canvasWidth / 2 + x * stageScale;
-    const canvasY = canvasHeight / 2 - y * stageScale; // flip y-axis
+    const canvasX = SCRATCH_STAGE_WIDTH / 2 + x;
+    const canvasY = SCRATCH_STAGE_HEIGHT / 2 - y; // flip y-axis
 
     // --------------------------
     // Rotation center (normalized by bitmap resolution)
@@ -99,24 +92,20 @@ export class Sprite {
     const drawWidth = image.width / bitmapResolution;
     const drawHeight = image.height / bitmapResolution;
 
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    this.konvaNode.setAttrs({
+      image: image,
+      x: canvasX,
+      y: canvasY,
+      width: drawWidth,
+      height: drawHeight,
+      rotation: direction - 90,
+      scaleX: size / 100,
+      scaleY: size / 100,
+      offsetX: rotationCenterX,
+      offsetY: rotationCenterY,
+      visible: true,
+    });
 
-    // Position + rotation
-    ctx.translate(canvasX, canvasY);
-    ctx.rotate(((direction - 90) * Math.PI) / 180);
-    ctx.scale(scale, scale);
-
-    // Draw image
-    ctx.drawImage(
-      image,
-      -rotationCenterX,
-      -rotationCenterY,
-      drawWidth,
-      drawHeight,
-    );
-
-    ctx.restore();
+    stage.spriteLayer.batchDraw();
   }
 }
