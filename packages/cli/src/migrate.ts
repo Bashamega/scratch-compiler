@@ -53,9 +53,9 @@ function generateMainJs(project: ScratchProject) {
   const stageTarget = findStageTarget(project);
   const stageCtorCode = generateStageCtorCode(stageTarget);
   const sprites = findSprites(project);
-  const spritesCtorCode = generateSpritesCtorCode(sprites);
+  const spritesCode = generateSpritesCode(sprites);
 
-  return composeMainJsSource(stageCtorCode, spritesCtorCode);
+  return composeMainJsSource(stageCtorCode, spritesCode);
 }
 
 /** Find the stage target in the project. */
@@ -77,14 +77,14 @@ function generateStageCtorCode(stageTarget?: ScratchTarget): string {
   const objFields: string[] = [];
   objFields.push(`name: ${JSON.stringify(stageTarget.name)}`);
   objFields.push(`costumes: [${costumesCode}]`);
+  objFields.push(`currentCostume: ${stageTarget.currentCostume ?? 0}`);
   objFields.push(`isStage: true`);
-  // Add any other relevant properties here for Stage
 
-  return `new Stage({ ${objFields.join(", ")} }, canvas)`;
+  return `new Stage({ ${objFields.join(", ")} }, "sb3-container")`;
 }
 
-/** Generate the code string for all Sprite constructors. */
-function generateSpritesCtorCode(sprites: ScratchTarget[]): string {
+/** Generate the code string for all Sprites. */
+function generateSpritesCode(sprites: ScratchTarget[]): string {
   return sprites
     .map((sprite) => {
       const costumesCode = generateCostumesArrayCode(sprite.costumes ?? []);
@@ -92,6 +92,8 @@ function generateSpritesCtorCode(sprites: ScratchTarget[]): string {
       const objFields: string[] = [];
       objFields.push(`name: ${JSON.stringify(sprite.name)}`);
       objFields.push(`costumes: [${costumesCode}]`);
+      objFields.push(`currentCostume: ${sprite.currentCostume ?? 0}`);
+      objFields.push(`isStage: false`);
       objFields.push(`x: ${typeof sprite.x === "number" ? sprite.x : 0}`);
       objFields.push(`y: ${typeof sprite.y === "number" ? sprite.y : 0}`);
       objFields.push(
@@ -103,12 +105,17 @@ function generateSpritesCtorCode(sprites: ScratchTarget[]): string {
       objFields.push(
         `size: ${typeof sprite.size === "number" ? sprite.size : 100}`,
       );
-      // You could add more optional fields as needed here
 
-      return `const ${sprite.name} = new Sprite({ ${objFields.join(", ")} }); 
-      ${sprite.name}.draw(ctx, width, height);`;
+      return `
+      const ${sanitizeVariableName(sprite.name)} = new Sprite({ ${objFields.join(", ")} }); 
+      ${sanitizeVariableName(sprite.name)}.draw(myStage);`;
     })
     .join("\n");
+}
+
+/** Sanitize sprite names for JS variable names */
+function sanitizeVariableName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_$]/g, "_").replace(/^[0-9]/, "_$0");
 }
 
 /** Generate the code string for a costumes array. */
@@ -121,9 +128,9 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
   assetId: ${JSON.stringify(costume.assetId)},
   md5ext: ${JSON.stringify(costume.md5ext)},
   dataFormat: ${JSON.stringify(costume.dataFormat)},
-  rotationCenterX: ${typeof costume.rotationCenterX === "number" ? costume.rotationCenterX : "undefined"},
-  rotationCenterY: ${typeof costume.rotationCenterY === "number" ? costume.rotationCenterY : "undefined"},
-  bitmapResolution: ${typeof costume.bitmapResolution === "number" ? costume.bitmapResolution : "undefined"},
+  rotationCenterX: ${typeof costume.rotationCenterX === "number" ? costume.rotationCenterX : 0},
+  rotationCenterY: ${typeof costume.rotationCenterY === "number" ? costume.rotationCenterY : 0},
+  bitmapResolution: ${typeof costume.bitmapResolution === "number" ? costume.bitmapResolution : 1},
 }`,
     )
     .join(", ");
@@ -132,29 +139,17 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
 /** Compose the contents of main.js */
 function composeMainJsSource(
   stageCtorCode: string,
-  spritesCtorCode: string,
+  spritesCode: string,
 ): string {
   return `
   import { Stage, Sprite } from "./engine.min.js";
   
-  // Get the drawing canvas
-  const canvas = document.getElementById("sb3-canvas");
-  
-  // Check if the canvas exists before continuing
-  if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
-    throw new Error("Canvas with id 'sb3-canvas' was not found!");
-  }
-  
   // Make the stage
   const myStage = ${stageCtorCode};
   myStage.draw();
-  // Cache frequently used references
-  const ctx = myStage.ctx;
-  const width = myStage.logicalWidth;
-  const height = myStage.logicalHeight;
   
   // Make the sprites
-  ${spritesCtorCode}
+  ${spritesCode}
   `;
 }
 

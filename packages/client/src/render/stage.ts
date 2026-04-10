@@ -1,37 +1,48 @@
 import type { ScratchCostume, ScratchTarget } from "@scratch-compiler/types";
 import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
+import {Stage as KonvaStage} from "konva/lib/Stage";
+import { Layer as KonvaLayer } from "konva/lib/Layer";
+import { Image as KonvaImage } from "konva/lib/shapes/Image";
 
 export class Stage {
   stage: ScratchTarget;
   currentCostume: ScratchCostume;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  konvaStage: KonvaStage;
+  backdropLayer: KonvaLayer;
+  spriteLayer: KonvaLayer;
+  backdropImage: KonvaImage;
+
   readonly logicalWidth: number;
   readonly logicalHeight: number;
 
   // Static image cache: assetUrl -> Promise<HTMLImageElement>
   private static imageCache: Map<string, Promise<HTMLImageElement>> = new Map();
 
-  constructor(data: ScratchTarget, canvas: HTMLCanvasElement) {
+  constructor(data: ScratchTarget, container: HTMLDivElement | string) {
     if (!data.isStage) throw new Error("Please pass a stage not sprite");
     this.stage = data;
     this.currentCostume = data.costumes[data.currentCostume ?? 0];
-    this.canvas = canvas;
-    const ctx = this.canvas.getContext("2d");
-    if (!ctx) throw new Error("Could not get 2D rendering context for Stage");
-    this.ctx = ctx;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.logicalWidth = SCRATCH_STAGE_WIDTH;
     this.logicalHeight = SCRATCH_STAGE_HEIGHT;
 
-    this.canvas.width = SCRATCH_STAGE_WIDTH * dpr;
-    this.canvas.height = SCRATCH_STAGE_HEIGHT * dpr;
-    this.canvas.style.width = SCRATCH_STAGE_WIDTH + "px";
-    this.canvas.style.height = SCRATCH_STAGE_HEIGHT + "px";
-    this.ctx.scale(dpr, dpr);
-    this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = "high";
+    this.konvaStage = new KonvaStage({
+      container,
+      width: SCRATCH_STAGE_WIDTH,
+      height: SCRATCH_STAGE_HEIGHT,
+    });
+
+    this.backdropLayer = new KonvaLayer();
+    this.spriteLayer = new KonvaLayer();
+    
+    this.konvaStage.add(this.backdropLayer);
+    this.konvaStage.add(this.spriteLayer);
+
+    this.backdropImage = new KonvaImage({
+      name: "backdrop",
+      image: new Image()
+    });
+    this.backdropLayer.add(this.backdropImage);
   }
 
   private async loadImage(costume: ScratchCostume): Promise<HTMLImageElement> {
@@ -71,11 +82,6 @@ export class Stage {
     if (!this.currentCostume) return;
   
     this.loadImage(this.currentCostume).then((img) => {
-      const ctx = this.ctx;
-      ctx.save();
-      const prevComposite = ctx.globalCompositeOperation;
-      ctx.globalCompositeOperation = "destination-over";
-  
       const w = this.logicalWidth;
       const h = this.logicalHeight;
 
@@ -94,10 +100,15 @@ export class Stage {
       const drawWidth = img.width / bitmapResolution;
       const drawHeight = img.height / bitmapResolution;
 
-      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      this.backdropImage.setAttrs({
+        image: img,
+        x: drawX,
+        y: drawY,
+        width: drawWidth,
+        height: drawHeight,
+      });
 
-      ctx.globalCompositeOperation = prevComposite;
-      ctx.restore();
+      this.backdropLayer.batchDraw();
     }).catch(console.warn);
   }
 
