@@ -21,14 +21,23 @@ export function generateEventBlocksCode(
 
     const events: { [opcode: string]: string } = {
       event_whenflagclicked: "flag",
-      event_whenthisspriteclicked: "click"
+      event_whenthisspriteclicked: "click",
+      event_whenkeypressed: "keypress"
     };
 
-    const eventName = events[block.opcode];
-    if (eventName) {
-      code.push(`${spriteVar}.on('${eventName}', () => {
-        // ${block.opcode}
+    if (block.opcode === "event_whenkeypressed") {
+      // For key press events, Scratch block has a 'fields' property 'KEY_OPTION'
+      const keyOption = block.fields?.KEY_OPTION?.[0] || "space";
+      code.push(`${spriteVar}.on('keypress', '${keyOption}', () => {
+        // ${block.opcode} (${keyOption})
       });`);
+    } else {
+      const eventName = events[block.opcode];
+      if (eventName && eventName !== "keypress") {
+        code.push(`${spriteVar}.on('${eventName}', () => {
+          // ${block.opcode}
+        });`);
+      }
     }
   }
 

@@ -41,7 +41,7 @@ export interface ScratchBlock {
   next: string | null;
   parent: string | null;
   inputs: Record<string, unknown>;
-  fields: Record<string, unknown>;
+  fields: Record<string, unknown[]>;
   shadow: boolean;
   topLevel: boolean;
   x?: number;
