@@ -6,9 +6,6 @@ export function onFlag(isReady: boolean, callback: () => void) {
   if (isReady) {
     callback();
   } else {
-    window.addEventListener("scratch-engine-ready", () => {
-      isReady = true;
-      callback();
-    });
+    window.addEventListener("scratch-engine-ready", callback, { once: true });
   }
 }

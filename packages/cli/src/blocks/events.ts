@@ -28,7 +28,7 @@ export function generateEventBlocksCode(
     if (block.opcode === "event_whenkeypressed") {
       // For key press events, Scratch block has a 'fields' property 'KEY_OPTION'
       const keyOption = block.fields?.KEY_OPTION?.[0] || "space";
-      code.push(`${spriteVar}.on('keypress', '${keyOption}', () => {
+      code.push(`${spriteVar}.on('keypress', ${JSON.stringify(keyOption)}, () => {
         // ${block.opcode} (${keyOption})
       });`);
     } else {
