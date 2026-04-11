@@ -5,6 +5,7 @@ export type {
   ScratchVariables,
   ScratchLists,
   ScratchBroadcasts,
+  ScratchBlock,
   ScratchBlocks,
   ScratchComments,
   ScratchSound,

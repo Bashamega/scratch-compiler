@@ -10,6 +10,7 @@ export class Sprite {
   konvaNode: KonvaImage;
   private isReady = false;
   private ready: Promise<void>;
+  private stage?: Stage;
 
   /**
    * Attaches a Scratch event callback to this sprite.
@@ -104,6 +105,8 @@ export class Sprite {
 
   /** Draws the sprite, waits for images if needed */
   draw(stage: Stage) {
+    this.stage = stage;
+
     if (this.isReady) {
       this.performDraw(stage);
     } else {
@@ -174,5 +177,26 @@ export class Sprite {
     });
 
     stage.spriteLayer.batchDraw();
+  }
+
+  turnRight(degrees: number) {
+    this.turnBy(degrees);
+  }
+
+  turnLeft(degrees: number) {
+    this.turnBy(-degrees);
+  }
+
+  private turnBy(delta: number) {
+    if (!Number.isFinite(delta)) {
+      console.warn(`[Sprite] turnBy expected a finite number, received ${delta}`);
+      return;
+    }
+
+    this.data.direction = (this.data.direction ?? 90) + delta;
+
+    if (this.stage) {
+      this.draw(this.stage);
+    }
   }
 }
