@@ -84,8 +84,14 @@ function generateStageCtorCode(stageTarget?: ScratchTarget): string {
   return `new Stage({ ${objFields.join(", ")} }, "sb3-container")`;
 }
 
-/** Generate the code string for all Sprites. */
+/**
+ * Generate the code string for all Sprites.
+ * Handles duplicate variable names by appending a number suffix.
+ */
 function generateSpritesCode(sprites: ScratchTarget[]): string {
+  const nameCounter: Record<string, number> = {};
+  const declaredVars: string[] = [];
+
   return sprites
     .map((sprite) => {
       const costumesCode = generateCostumesArrayCode(sprite.costumes ?? []);
@@ -107,7 +113,17 @@ function generateSpritesCode(sprites: ScratchTarget[]): string {
         `size: ${typeof sprite.size === "number" ? sprite.size : 100}`,
       );
 
-      const spriteVar = sanitizeVariableName(sprite.name);
+      // Sanitize sprite name and deduplicate variable
+      let spriteVarBase = sanitizeVariableName(sprite.name);
+      let spriteVar = spriteVarBase;
+      if (nameCounter[spriteVarBase] == null) {
+        nameCounter[spriteVarBase] = 1;
+      } else {
+        nameCounter[spriteVarBase]++;
+        spriteVar = `${spriteVarBase}${nameCounter[spriteVarBase]}`;
+      }
+      declaredVars.push(spriteVar);
+
       const eventsCode = generateEventBlocksCode(sprite, spriteVar);
 
       return `
@@ -120,7 +136,26 @@ function generateSpritesCode(sprites: ScratchTarget[]): string {
 
 /** Sanitize sprite names for JS variable names */
 function sanitizeVariableName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_$]/g, "_").replace(/^[0-9]/, "_$0");
+  if (!name) return "_";
+
+  const words = name
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, " ") // normalize separators
+    .split(" ")
+    .filter(Boolean);
+
+  if (words.length === 0) return "_";
+
+  const camel = words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+      if (index === 0) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join("");
+
+  // Ensure valid JS identifier (no leading number)
+  return /^[0-9]/.test(camel) ? `_${camel}` : camel;
 }
 
 /** Generate the code string for a costumes array. */
