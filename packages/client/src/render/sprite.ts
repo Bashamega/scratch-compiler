@@ -203,6 +203,24 @@ export class Sprite {
   turnLeft(degrees: number) {
     this.turnBy(-degrees);
   }
+  move(steps: number) {
+    if (!Number.isFinite(steps)) {
+      console.warn(`[Sprite] move expected a finite number, received ${steps}`);
+      return;
+    }
+
+    // In Scratch, 0 degrees is up, 90 is right -- convert degrees to radians for math
+    const direction = (this.data.direction ?? 90);
+    const radians = (direction - 90) * (Math.PI / 180);
+
+    // Each "step" is 1 unit in scratch coordinate space
+    this.data.x = (this.data.x ?? 0) + steps * Math.cos(radians);
+    this.data.y = (this.data.y ?? 0) + steps * Math.sin(radians);
+
+    if (this.stage) {
+      this.draw(this.stage);
+    }
+  }
 
   private turnBy(delta: number) {
     if (!Number.isFinite(delta)) {

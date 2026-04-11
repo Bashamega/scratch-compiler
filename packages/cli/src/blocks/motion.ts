@@ -16,6 +16,10 @@ export function generateMotionBlockCode(
       const degrees = readNumericInput(block.inputs, "DEGREES", 15);
       return `${spriteVar}.turnLeft(${degrees});`;
     }
+    case "motion_movesteps": {
+      const steps = readNumericInput(block.inputs, "STEPS", 10);
+      return `${spriteVar}.move(${steps});`;
+    }
     default:
       return null;
   }
