@@ -35,7 +35,20 @@ export interface ScratchTarget {
 export type ScratchVariables = Record<string, [string, number]>;
 export type ScratchLists = Record<string, unknown>;
 export type ScratchBroadcasts = Record<string, unknown>;
-export type ScratchBlocks = Record<string, unknown>;
+
+export interface ScratchBlock {
+  opcode: string;
+  next: string | null;
+  parent: string | null;
+  inputs: Record<string, unknown>;
+  fields: Record<string, unknown[]>;
+  shadow: boolean;
+  topLevel: boolean;
+  x?: number;
+  y?: number;
+}
+
+export type ScratchBlocks = Record<string, ScratchBlock>;
 export type ScratchComments = Record<string, unknown>;
 
 export interface ScratchCostume {
