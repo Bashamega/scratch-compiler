@@ -105,7 +105,20 @@ export class Sprite {
 
   /** Draws the sprite, waits for images if needed */
   draw(stage: Stage) {
-    this.stage = stage;
+    // If the stage is changing, reparent the konvaNode to the new stage's spriteLayer
+    if (this.stage !== stage) {
+      // Remove from old stage's layer if parented
+      const parent = this.konvaNode.getParent();
+      if (parent) {
+        parent.remove();
+   
+      }
+      // Add to new stage's layer if not already present
+      if (stage.spriteLayer && this.konvaNode.getParent() !== stage.spriteLayer) {
+        stage.spriteLayer.add(this.konvaNode);
+      }
+      this.stage = stage;
+    }
 
     if (this.isReady) {
       this.performDraw(stage);
@@ -119,7 +132,12 @@ export class Sprite {
   }
 
   private performDraw(stage: Stage) {
+    // We assume that draw() handles reparenting, so only add to spriteLayer if not parented
     if (!this.konvaNode.getParent()) {
+      stage.spriteLayer.add(this.konvaNode);
+    } else if (this.konvaNode.getParent() !== stage.spriteLayer) {
+      // Defensive: ensure reparenting if something is mismatched.
+      this.konvaNode.getParent()?.remove();
       stage.spriteLayer.add(this.konvaNode);
     }
 
