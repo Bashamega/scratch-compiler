@@ -110,8 +110,7 @@ export class Sprite {
       // Remove from old stage's layer if parented
       const parent = this.konvaNode.getParent();
       if (parent) {
-        parent.remove();
-   
+        this.konvaNode.remove();
       }
       // Add to new stage's layer if not already present
       if (stage.spriteLayer && this.konvaNode.getParent() !== stage.spriteLayer) {
@@ -137,7 +136,7 @@ export class Sprite {
       stage.spriteLayer.add(this.konvaNode);
     } else if (this.konvaNode.getParent() !== stage.spriteLayer) {
       // Defensive: ensure reparenting if something is mismatched.
-      this.konvaNode.getParent()?.remove();
+      this.konvaNode.remove();
       stage.spriteLayer.add(this.konvaNode);
     }
 
