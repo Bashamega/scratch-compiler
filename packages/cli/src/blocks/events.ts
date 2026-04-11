@@ -1,4 +1,5 @@
-import { ScratchTarget } from "@scratch-compiler/types";
+import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
+import { generateSequenceCode, readFieldString, unsupportedSequenceComment } from "./handlers";
 
 /**
  * Generates event handling code for a Scratch target.
@@ -10,36 +11,46 @@ export function generateEventBlocksCode(
   target: ScratchTarget,
   spriteVar: string,
 ): string {
-  const blocks = target.blocks;
   const code: string[] = [];
 
-  for (const blockId in blocks) {
-    const block = blocks[blockId];
-
-    // Only handle top-level blocks for event handlers
+  for (const [blockId, block] of Object.entries(target.blocks)) {
     if (!block.topLevel) continue;
 
-    const events: { [opcode: string]: string } = {
-      event_whenflagclicked: "flag",
-      event_whenthisspriteclicked: "click",
-      event_whenkeypressed: "keypress"
-    };
-
-    if (block.opcode === "event_whenkeypressed") {
-      // For key press events, Scratch block has a 'fields' property 'KEY_OPTION'
-      const keyOption = block.fields?.KEY_OPTION?.[0] || "space";
-      code.push(`${spriteVar}.on('keypress', ${JSON.stringify(keyOption)}, () => {
-        // ${block.opcode} (${keyOption})
-      });`);
-    } else {
-      const eventName = events[block.opcode];
-      if (eventName && eventName !== "keypress") {
-        code.push(`${spriteVar}.on('${eventName}', () => {
-          // ${block.opcode}
-        });`);
-      }
+    const handlerCode = generateTopLevelEventCode(target, blockId, block, spriteVar);
+    if (handlerCode) {
+      code.push(handlerCode);
     }
   }
 
   return code.join("\n");
+}
+
+function generateTopLevelEventCode(
+  target: ScratchTarget,
+  blockId: string,
+  block: ScratchBlock,
+  spriteVar: string,
+): string | null {
+  const sequenceCode = generateSequenceCode(target, block.next, spriteVar);
+
+  switch (block.opcode) {
+    case "event_whenkeypressed": {
+      const keyOption = readFieldString(block.fields, "KEY_OPTION") ?? "space";
+      return `${spriteVar}.on("keypress", ${JSON.stringify(keyOption)}, () => {
+  // ${block.opcode} (${keyOption})
+${sequenceCode || unsupportedSequenceComment(blockId)}
+});`;
+    }
+    case "event_whenflagclicked":
+    case "event_whenthisspriteclicked": {
+      const eventName =
+        block.opcode === "event_whenflagclicked" ? "flag" : "click";
+      return `${spriteVar}.on("${eventName}", () => {
+  // ${block.opcode}
+${sequenceCode || unsupportedSequenceComment(blockId)}
+});`;
+    }
+    default:
+      return null;
+  }
 }

@@ -10,6 +10,7 @@ export class Sprite {
   konvaNode: KonvaImage;
   private isReady = false;
   private ready: Promise<void>;
+  private stage?: Stage;
 
   /**
    * Attaches a Scratch event callback to this sprite.
@@ -104,6 +105,20 @@ export class Sprite {
 
   /** Draws the sprite, waits for images if needed */
   draw(stage: Stage) {
+    // If the stage is changing, reparent the konvaNode to the new stage's spriteLayer
+    if (this.stage !== stage) {
+      // Remove from old stage's layer if parented
+      const parent = this.konvaNode.getParent();
+      if (parent) {
+        this.konvaNode.remove();
+      }
+      // Add to new stage's layer if not already present
+      if (stage.spriteLayer && this.konvaNode.getParent() !== stage.spriteLayer) {
+        stage.spriteLayer.add(this.konvaNode);
+      }
+      this.stage = stage;
+    }
+
     if (this.isReady) {
       this.performDraw(stage);
     } else {
@@ -116,7 +131,12 @@ export class Sprite {
   }
 
   private performDraw(stage: Stage) {
+    // We assume that draw() handles reparenting, so only add to spriteLayer if not parented
     if (!this.konvaNode.getParent()) {
+      stage.spriteLayer.add(this.konvaNode);
+    } else if (this.konvaNode.getParent() !== stage.spriteLayer) {
+      // Defensive: ensure reparenting if something is mismatched.
+      this.konvaNode.remove();
       stage.spriteLayer.add(this.konvaNode);
     }
 
@@ -174,5 +194,26 @@ export class Sprite {
     });
 
     stage.spriteLayer.batchDraw();
+  }
+
+  turnRight(degrees: number) {
+    this.turnBy(degrees);
+  }
+
+  turnLeft(degrees: number) {
+    this.turnBy(-degrees);
+  }
+
+  private turnBy(delta: number) {
+    if (!Number.isFinite(delta)) {
+      console.warn(`[Sprite] turnBy expected a finite number, received ${delta}`);
+      return;
+    }
+
+    this.data.direction = (this.data.direction ?? 90) + delta;
+
+    if (this.stage) {
+      this.draw(this.stage);
+    }
   }
 }
