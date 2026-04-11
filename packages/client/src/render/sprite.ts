@@ -24,7 +24,7 @@ export class Sprite {
         events.onClick(this, callback);
         break;
       case "flag":
-        events.onFlag(this, callback);
+        events.onFlag(true, callback);
         break;
       default:
         console.warn(`[Sprite] Unknown event type: ${eventName}`);

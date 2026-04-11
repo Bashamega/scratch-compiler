@@ -7,6 +7,7 @@ import { copyFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { fromBuffer, Entry, ZipFile } from "yauzl";
 import { formatJsString } from "./format";
+import { generateEventBlocksCode } from "./blocks";
 
 /**
  * Migrates a Scratch project by copying static assets, extracting project.json,
@@ -106,9 +107,13 @@ function generateSpritesCode(sprites: ScratchTarget[]): string {
         `size: ${typeof sprite.size === "number" ? sprite.size : 100}`,
       );
 
+      const spriteVar = sanitizeVariableName(sprite.name);
+      const eventsCode = generateEventBlocksCode(sprite, spriteVar);
+
       return `
-      const ${sanitizeVariableName(sprite.name)} = new Sprite({ ${objFields.join(", ")} }); 
-      ${sanitizeVariableName(sprite.name)}.draw(myStage);`;
+      const ${spriteVar} = new Sprite({ ${objFields.join(", ")} }); 
+      ${spriteVar}.draw(myStage);
+      ${eventsCode}`;
     })
     .join("\n");
 }
