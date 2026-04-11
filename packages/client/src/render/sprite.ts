@@ -2,6 +2,7 @@ import type { ScratchTarget } from "@scratch-compiler/types";
 import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
 import type { Stage } from "./stage";
 import { Image as KonvaImage } from "konva/lib/shapes/Image";
+import * as events from "../blocks/events";
 
 export class Sprite {
   data: ScratchTarget;
@@ -9,6 +10,36 @@ export class Sprite {
   konvaNode: KonvaImage;
   private isReady = false;
   private ready: Promise<void>;
+
+  /**
+   * Attaches a Scratch event callback to this sprite.
+   * This provides a scalable way for the CLI to wire up converted JS blocks.
+   *
+   * @param eventName The event type (e.g., 'click', 'flag')
+   * @param callback The pure JS callback to execute
+   */
+  on(eventName: "click" | "flag", callback: () => void) {
+    switch (eventName) {
+      case "click":
+        events.onClick(this, callback);
+        break;
+      case "flag":
+        events.onFlag(this, callback);
+        break;
+      default:
+        console.warn(`[Sprite] Unknown event type: ${eventName}`);
+    }
+  }
+
+  /** Shortcut for on('click', ...) */
+  onClick(callback: () => void) {
+    this.on("click", callback);
+  }
+
+  /** Shortcut for on('flag', ...) */
+  onFlag(callback: () => void) {
+    this.on("flag", callback);
+  }
 
   constructor(data: ScratchTarget) {
     this.data = data;
