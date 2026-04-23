@@ -1,6 +1,7 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
 import { generateMotionBlockCode } from "../motion";
 import { generateControlBlockCode } from "../control";
+import { generateLooksBlockCode } from "../looks";
 
 /**
  * Step through a chain of Scratch blocks, returning the generated code.
@@ -60,6 +61,8 @@ export function generateBlockCode(
   switch (category) {
     case "motion":
       return generateMotionBlockCode(block, spriteVar);
+    case "looks":
+      return generateLooksBlockCode(block, spriteVar);
     case "control":
       return generateControlBlockCode(
         target,

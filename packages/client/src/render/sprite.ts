@@ -195,6 +195,16 @@ export class Sprite {
 
     stage.spriteLayer.batchDraw();
   }
+  nextCostume() {
+    // Advances to the next costume, wrapping around as needed
+    if (!Array.isArray(this.data.costumes) || this.data.costumes.length === 0) return;
+    const current = this.data.currentCostume ?? 0;
+    const next = (current + 1) % this.data.costumes.length;
+    this.data.currentCostume = next;
+    if (this.stage) {
+      this.draw(this.stage);
+    }
+  }
 
   turnRight(degrees: number) {
     this.turnBy(degrees);
