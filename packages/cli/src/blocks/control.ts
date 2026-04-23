@@ -28,7 +28,7 @@ export function generateControlBlockCode(
 
       return `while (true) {
 ${bodyCode.split('\n').map(line => `  ${line}`).join('\n')}
-${hasAwaitDelay ? '' : '  await new Promise(resolve => setTimeout(resolve, 0));\n'}}`;
+${hasAwaitDelay ? '' : '  await new Promise(resolve => setTimeout(resolve, 200));\n'}}`;
     }
     default:
       return null;
