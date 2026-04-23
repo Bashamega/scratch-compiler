@@ -36,7 +36,7 @@ function generateTopLevelEventCode(
   switch (block.opcode) {
     case "event_whenkeypressed": {
       const keyOption = readFieldString(block.fields, "KEY_OPTION") ?? "space";
-      return `${spriteVar}.on("keypress", ${JSON.stringify(keyOption)}, () => {
+      return `${spriteVar}.on("keypress", ${JSON.stringify(keyOption)}, async () => {
   // ${block.opcode} (${keyOption})
 ${sequenceCode || unsupportedSequenceComment(blockId)}
 });`;
@@ -45,7 +45,7 @@ ${sequenceCode || unsupportedSequenceComment(blockId)}
     case "event_whenthisspriteclicked": {
       const eventName =
         block.opcode === "event_whenflagclicked" ? "flag" : "click";
-      return `${spriteVar}.on("${eventName}", () => {
+      return `${spriteVar}.on("${eventName}", async () => {
   // ${block.opcode}
 ${sequenceCode || unsupportedSequenceComment(blockId)}
 });`;

@@ -1,9 +1,6 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
 import { generateMotionBlockCode } from "../motion";
-// Future imports for additional block categories could go here
-// import { generateLooksBlockCode } from "../looks";
-// import { generateControlBlockCode } from "../control";
-// etc.
+import { generateControlBlockCode } from "../control";
 
 /**
  * Step through a chain of Scratch blocks, returning the generated code.
@@ -38,7 +35,7 @@ export function generateSequenceCode(
       break;
     }
 
-    const blockCode = generateBlockCode(block, spriteVar);
+    const blockCode = generateBlockCode(target, block, spriteVar);
     if (blockCode) {
       code.push(blockCode);
     } else {
@@ -53,38 +50,29 @@ export function generateSequenceCode(
 
 /**
  * Dispatch block code generation based on the type of block.
- * For now, only motion blocks are handled, but this is extensible.
  */
 export function generateBlockCode(
+  target: ScratchTarget,
   block: ScratchBlock,
   spriteVar: string,
 ): string | null {
-  // Dispatch to different generators based on the opcode prefix
   const [category] = block.opcode.split("_");
   switch (category) {
     case "motion":
       return generateMotionBlockCode(block, spriteVar);
-    // case "looks":
-    //   return generateLooksBlockCode(block, spriteVar);
-    // case "control":
-    //   return generateControlBlockCode(block, spriteVar);
+    case "control":
+      return generateControlBlockCode(
+        target,
+        block,
+        spriteVar,
+        generateSequenceCode,
+      );
     default:
       return null;
   }
 }
 
-export function readFieldString(
-  fields: ScratchBlock["fields"],
-  fieldName: string,
-): string | null {
-  const field = fields[fieldName];
-  if (!Array.isArray(field) || field.length === 0) {
-    return null;
-  }
-
-  const value = field[0];
-  return typeof value === "string" ? value : null;
-}
+export { readFieldString } from "../utils";
 
 export function unsupportedSequenceComment(blockId: string): string {
   return `// No supported blocks found after ${blockId}`;
