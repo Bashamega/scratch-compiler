@@ -21,6 +21,9 @@ export function generateMotionBlockCode(
       const steps = readNumericInput(block.inputs, "STEPS", 10);
       return `${spriteVar}.move(${steps});`;
     }
+    case "motion_ifonedgebounce": {
+      return `${spriteVar}.ifOnEdgeBounce();`;
+    }
     default:
       return null;
   }

@@ -232,6 +232,65 @@ export class Sprite {
     }
   }
 
+  /**
+   * If the sprite is touching the edge of the stage, bounce it back.
+   * This matches Scratch's "if on edge, bounce" block.
+   */
+  ifOnEdgeBounce() {
+    if (!this.stage) return;
+
+    // Ensure the node is updated with current data to get accurate bounding box
+    this.performDraw(this.stage);
+
+    // Get bounding box in canvas coordinates
+    const rect = this.konvaNode.getClientRect();
+    const stageWidth = SCRATCH_STAGE_WIDTH;
+    const stageHeight = SCRATCH_STAGE_HEIGHT;
+
+    let bounced = false;
+    let direction = this.data.direction ?? 90;
+    let x = this.data.x ?? 0;
+    let y = this.data.y ?? 0;
+
+    // Left edge
+    if (rect.x < 0) {
+      x += -rect.x;
+      direction = -direction;
+      bounced = true;
+    }
+    // Right edge
+    else if (rect.x + rect.width > stageWidth) {
+      x -= (rect.x + rect.width - stageWidth);
+      direction = -direction;
+      bounced = true;
+    }
+
+    // Top edge
+    if (rect.y < 0) {
+      y -= -rect.y; // canvas Y is inverted from Scratch Y
+      direction = 180 - direction;
+      bounced = true;
+    }
+    // Bottom edge
+    else if (rect.y + rect.height > stageHeight) {
+      y += (rect.y + rect.height - stageHeight);
+      direction = 180 - direction;
+      bounced = true;
+    }
+
+    if (bounced) {
+      // Normalize direction to (-180, 180]
+      direction = direction % 360;
+      if (direction <= -180) direction += 360;
+      if (direction > 180) direction -= 360;
+
+      this.data.direction = direction;
+      this.data.x = x;
+      this.data.y = y;
+      this.draw(this.stage);
+    }
+  }
+
   private turnBy(delta: number) {
     if (!Number.isFinite(delta)) {
       console.warn(`[Sprite] turnBy expected a finite number, received ${delta}`);
