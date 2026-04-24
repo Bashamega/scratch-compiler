@@ -105,6 +105,7 @@ export class Sprite {
 
   /** Draws the sprite, waits for images if needed */
   draw(stage: Stage) {
+    stage.addSprite(this);
     // If the stage is changing, reparent the konvaNode to the new stage's spriteLayer
     if (this.stage !== stage) {
       // Remove from old stage's layer if parented
@@ -241,6 +242,52 @@ export class Sprite {
     if (this.stage) {
       this.draw(this.stage);
     }
+  }
+
+  /**
+   * Checks if this sprite is touching another object.
+   * @param targetName The name of the target sprite, "_mouse_", or "_edge_".
+   */
+  isTouching(targetName: "_mouse_" | "_edge_"): boolean {
+    if (!this.stage) return false;
+
+    if (targetName === "_edge_") {
+      // Ensure current bounds are updated
+      const rect = this.konvaNode.getClientRect();
+      return (
+        rect.x < 0 ||
+        rect.y < 0 ||
+        rect.x + rect.width > SCRATCH_STAGE_WIDTH ||
+        rect.y + rect.height > SCRATCH_STAGE_HEIGHT
+      );
+    }
+
+    if (targetName === "_mouse_") {
+      const pos = this.stage.konvaStage.getPointerPosition();
+      if (!pos) return false;
+
+      // Konva's getIntersection is perfect for checking if a point is over a node
+      const intersected = this.stage.konvaStage.getIntersection(pos);
+      return intersected === this.konvaNode;
+    }
+
+    // Otherwise, check for collision with another sprite by name
+    const targetSprite = this.stage.sprites.find(
+      (s) => s.data.name === targetName && s !== this
+    );
+    if (!targetSprite) return false;
+
+    // A simple AABB intersection check for now. 
+    // This can be upgraded to pixel-perfect if needed later.
+    const r1 = this.konvaNode.getClientRect();
+    const r2 = targetSprite.konvaNode.getClientRect();
+
+    return !(
+      r2.x > r1.x + r1.width ||
+      r2.x + r2.width < r1.x ||
+      r2.y > r1.y + r1.height ||
+      r2.y + r2.height < r1.y
+    );
   }
 
   /**

@@ -3,6 +3,7 @@ import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
 import {Stage as KonvaStage} from "konva/lib/Stage";
 import { Layer as KonvaLayer } from "konva/lib/Layer";
 import { Image as KonvaImage } from "konva/lib/shapes/Image";
+import type { Sprite } from "./sprite";
 
 export class Stage {
   stage: ScratchTarget;
@@ -11,6 +12,7 @@ export class Stage {
   backdropLayer: KonvaLayer;
   spriteLayer: KonvaLayer;
   backdropImage: KonvaImage;
+  sprites: Sprite[] = [];
 
   readonly logicalWidth: number;
   readonly logicalHeight: number;
@@ -43,6 +45,12 @@ export class Stage {
       image: new Image()
     });
     this.backdropLayer.add(this.backdropImage);
+  }
+
+  addSprite(sprite: Sprite) {
+    if (!this.sprites.includes(sprite)) {
+      this.sprites.push(sprite);
+    }
   }
 
   private async loadImage(costume: ScratchCostume): Promise<HTMLImageElement> {

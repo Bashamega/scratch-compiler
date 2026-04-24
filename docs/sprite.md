@@ -45,6 +45,9 @@ Cycles to the next costume in the sprite's costume list.
 ### `ifOnEdgeBounce()`
 Checks if the sprite's bounding box is touching the stage edge and, if so, reflects its direction and snaps it back inside.
 
+### `isTouching(targetName: string | "_mouse_" | "_edge_"): boolean`
+Checks if this sprite is touching another sprite (by name), the mouse pointer (`"_mouse_"`), or the edge of the stage (`"_edge_"`). For collision with sprites, a simple bounding-box intersection is used; for the edge, checks against the stage bounds; for mouse, checks if the sprite contains the current pointer position.
+
 ## Technical Details
 
 ### Konva Integration
