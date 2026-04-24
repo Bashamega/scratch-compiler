@@ -10,7 +10,10 @@
     "cli:start": "pnpm --filter @scratch-compiler/cli run start",
     "client:build": "pnpm --filter @scratch-compiler/client run build",
     "client:bundle": "pnpm --filter @scratch-compiler/client run build",
-    "client:dev": "pnpm --filter @scratch-compiler/client run dev"
+    "client:dev": "pnpm --filter @scratch-compiler/client run dev",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish"
   },
   "keywords": [
     "scratch",
@@ -21,6 +24,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "esbuild": "^0.27.4",
     "typescript": "^5.4.0"
   }

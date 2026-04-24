@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "SB3 asset extraction tool",
   "main": "dist/cli.js",
+  "files": [
+    "dist",
+    "static"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "scratch-compile": "dist/cli.js"
   },

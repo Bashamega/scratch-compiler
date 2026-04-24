@@ -2,12 +2,25 @@
   "name": "@scratch-compiler/client",
   "version": "0.1.0",
   "description": "Scratch runtime for the browser",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@scratch-compiler/types": "workspace:*",
     "konva": "^10.2.3"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --target=es2020",
+    "build": "pnpm run build:dist && pnpm run build:cli-bundle",
+    "build:dist": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/index.js --format=esm --target=es2020",
+    "build:cli-bundle": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --target=es2020",
     "dev": "esbuild src/index.ts --bundle --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --watch"
   },
   "devDependencies": {
