@@ -3,6 +3,7 @@ import { SCRATCH_STAGE_HEIGHT, SCRATCH_STAGE_WIDTH } from "../config";
 import type { Stage } from "./stage";
 import { Image as KonvaImage } from "konva/lib/shapes/Image";
 import * as events from "../blocks/events";
+import { loadCostumeImage } from "./costumeImage";
 
 export class Sprite {
   data: ScratchTarget;
@@ -86,16 +87,11 @@ export class Sprite {
     });
 
     // Load all costumes and track when all are ready
-    const promises = this.data.costumes.map((costume, index) => {
-      const img = new Image();
-      img.src = `./assets/${costume.md5ext}`;
-      this.images.push(img);
-
-      return new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(`Failed to load ${costume.md5ext}`);
-      });
-    });
+    const promises = this.data.costumes.map((costume, index) =>
+      loadCostumeImage(costume).then((img) => {
+        this.images[index] = img;
+      }),
+    );
 
     // This promise resolves when all images are loaded
     this.ready = Promise.all(promises).then(() => {
@@ -103,22 +99,18 @@ export class Sprite {
     });
   }
 
+  private attachToStage(stage: Stage) {
+    stage.addSprite(this);
+    if (this.stage === stage) return;
+
+    this.konvaNode.remove();
+    stage.spriteLayer.add(this.konvaNode);
+    this.stage = stage;
+  }
+
   /** Draws the sprite, waits for images if needed */
   draw(stage: Stage) {
-    stage.addSprite(this);
-    // If the stage is changing, reparent the konvaNode to the new stage's spriteLayer
-    if (this.stage !== stage) {
-      // Remove from old stage's layer if parented
-      const parent = this.konvaNode.getParent();
-      if (parent) {
-        this.konvaNode.remove();
-      }
-      // Add to new stage's layer if not already present
-      if (stage.spriteLayer && this.konvaNode.getParent() !== stage.spriteLayer) {
-        stage.spriteLayer.add(this.konvaNode);
-      }
-      this.stage = stage;
-    }
+    this.attachToStage(stage);
 
     if (this.isReady) {
       this.performDraw(stage);
@@ -132,15 +124,6 @@ export class Sprite {
   }
 
   private performDraw(stage: Stage) {
-    // We assume that draw() handles reparenting, so only add to spriteLayer if not parented
-    if (!this.konvaNode.getParent()) {
-      stage.spriteLayer.add(this.konvaNode);
-    } else if (this.konvaNode.getParent() !== stage.spriteLayer) {
-      // Defensive: ensure reparenting if something is mismatched.
-      this.konvaNode.remove();
-      stage.spriteLayer.add(this.konvaNode);
-    }
-
     if (!this.data.visible) {
       this.konvaNode.visible(false);
       stage.spriteLayer.batchDraw();
