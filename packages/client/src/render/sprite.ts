@@ -348,6 +348,25 @@ export class Sprite {
       this.draw(this.stage);
     }
   }
+  /**
+   * Hide the sprite (makes it invisible).
+   */
+  hide() {
+    this.data.visible = false;
+    if (this.stage) {
+      this.draw(this.stage);
+    }
+  }
+
+  /**
+   * Show the sprite (makes it visible).
+   */
+  show() {
+    this.data.visible = true;
+    if (this.stage) {
+      this.draw(this.stage);
+    }
+  }
 
   private turnBy(delta: number) {
     if (!Number.isFinite(delta)) {

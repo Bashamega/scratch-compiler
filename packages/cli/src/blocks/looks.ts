@@ -11,6 +11,12 @@ export function generateLooksBlockCode(
     case "looks_nextcostume": {
       return `${spriteVar}.nextCostume();`;
     }
+    case "looks_hide": {
+      return `${spriteVar}.hide();`;
+    }
+    case "looks_show": {
+      return `${spriteVar}.show();`;
+    }
     default:
       return null;
   }

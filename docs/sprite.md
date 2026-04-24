@@ -42,6 +42,12 @@ Rotates the sprite relative to its current direction.
 ### `nextCostume()`
 Cycles to the next costume in the sprite's costume list.
 
+### `hide()`
+Makes the sprite invisible on the stage.
+
+### `show()`
+Makes the sprite visible on the stage.
+
 ### `ifOnEdgeBounce()`
 Checks if the sprite's bounding box is touching the stage edge and, if so, reflects its direction and snaps it back inside.
 
