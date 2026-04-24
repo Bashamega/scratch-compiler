@@ -30,6 +30,44 @@ export function generateControlBlockCode(
 ${bodyCode.split('\n').map(line => `  ${line}`).join('\n')}
 ${hasAwaitDelay ? '' : '  await new Promise(resolve => setTimeout(resolve, 200));\n'}}`;
     }
+    case "control_if": {
+      const conditionBlockId = readInputBlockId(block.inputs, "CONDITION");
+      const substackId = readInputBlockId(block.inputs, "SUBSTACK");
+
+      // For condition evaluation, generate code to evaluate the condition as a boolean expression or value
+      // For simplicity, just call generateSequenceCode for condition and body
+      const condExpr = conditionBlockId
+        ? generateSequenceCode(target, conditionBlockId, spriteVar) || "false"
+        : "false";
+      const bodyCode = generateSequenceCode(target, substackId, spriteVar);
+
+      // Attempt to take the last line of condExpr if possible (as a single expression/statement)
+      // Fallback to false if condExpr is empty
+      const condSource = (() => {
+        if (!condExpr.trim()) return "false";
+        const lines = condExpr.trim().split('\n');
+        // Check if the single line (after trimming whitespace) is a comment (starts with //)
+        if (lines.length === 1) {
+          const line = lines[0].trim();
+          if (line.startsWith("//")) {
+            // The condition block only generated a comment (unsupported block), so treat condition as false
+            return "false";
+    
+          }
+          return line;
+        }
+        // If any line starts with //, treat as comment and return false
+        if (lines.some(line => line.trim().startsWith("//"))) {
+          return "false";
+        }
+        // Otherwise, wrap in (() => { ... })()
+        return `(() => {\n${condExpr.split('\n').map(line => '  ' + line).join('\n')}\n})()`;
+      })();
+
+      return `if (${condSource}) {
+${bodyCode.split('\n').map(line => `  ${line}`).join('\n')}
+}`;
+    }
     default:
       return null;
   }
