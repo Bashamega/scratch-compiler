@@ -68,6 +68,41 @@ ${hasAwaitDelay ? '' : '  await new Promise(resolve => setTimeout(resolve, 200))
 ${bodyCode.split('\n').map(line => `  ${line}`).join('\n')}
 }`;
     }
+    case "control_if_else": {
+      const conditionBlockId = readInputBlockId(block.inputs, "CONDITION");
+      const substackId = readInputBlockId(block.inputs, "SUBSTACK");
+      const substack2Id = readInputBlockId(block.inputs, "SUBSTACK2");
+
+      // Generate code for the condition
+      const condExpr = conditionBlockId
+        ? generateSequenceCode(target, conditionBlockId, spriteVar) || "false"
+        : "false";
+      const thenCode = generateSequenceCode(target, substackId, spriteVar);
+      const elseCode = generateSequenceCode(target, substack2Id, spriteVar);
+
+      // Attempt to take the last line of condExpr if possible (as a single expression/statement)
+      const condSource = (() => {
+        if (!condExpr.trim()) return "false";
+        const lines = condExpr.trim().split('\n');
+        if (lines.length === 1) {
+          const line = lines[0].trim();
+          if (line.startsWith("//")) {
+            return "false";
+          }
+          return line;
+        }
+        if (lines.some(line => line.trim().startsWith("//"))) {
+          return "false";
+        }
+        return `(() => {\n${condExpr.split('\n').map(line => '  ' + line).join('\n')}\n})()`;
+      })();
+
+      return `if (${condSource}) {
+${thenCode.split('\n').map(line => `  ${line}`).join('\n')}
+} else {
+${elseCode.split('\n').map(line => `  ${line}`).join('\n')}
+}`;
+    }
     default:
       return null;
   }
