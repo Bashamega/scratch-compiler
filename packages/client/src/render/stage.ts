@@ -121,7 +121,9 @@ export class Stage {
   }
 
   change(id: string) {
-    const costume = this.stage.costumes.find((c) => c.assetId === id);
+    const costume = this.stage.costumes.find(
+      (c) => c.name === id || c.assetId === id,
+    );
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
     this.draw(); // auto draw after change

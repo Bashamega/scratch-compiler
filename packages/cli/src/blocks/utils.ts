@@ -1,4 +1,4 @@
-import type { ScratchBlock } from "@scratch-compiler/types";
+import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
 
 export function readFieldString(
   fields: ScratchBlock["fields"],
@@ -27,6 +27,35 @@ export function readInputBlockId(
   // value can be a string (block ID) or an array (primitive)
   const value = input[1];
   return typeof value === "string" ? value : null;
+}
+
+/**
+ * Resolves a menu-style input to its selected string value.
+ * Scratch commonly stores these as an input pointing at a shadow block whose
+ * field contains the visible menu choice.
+ */
+export function readInputMenuString(
+  target: ScratchTarget,
+  inputs: ScratchBlock["inputs"],
+  inputName: string,
+  fieldName: string,
+): string | null {
+  const input = inputs[inputName];
+  if (!Array.isArray(input)) {
+    return null;
+  }
+
+  const value = input[1];
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const inputBlock = target.blocks[value];
+  if (inputBlock) {
+    return readFieldString(inputBlock.fields, fieldName);
+  }
+
+  return value;
 }
 
 export function readNumericInput(

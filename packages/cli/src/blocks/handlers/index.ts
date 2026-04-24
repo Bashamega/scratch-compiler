@@ -63,7 +63,7 @@ export function generateBlockCode(
     case "motion":
       return generateMotionBlockCode(block, spriteVar);
     case "looks":
-      return generateLooksBlockCode(block, spriteVar);
+      return generateLooksBlockCode(target, block, spriteVar);
     case "sensing":
       return generateSensingBlockCode(target, block, spriteVar);
     case "control":

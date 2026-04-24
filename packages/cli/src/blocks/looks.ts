@@ -1,9 +1,11 @@
-import type { ScratchBlock } from "@scratch-compiler/types";
+import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
+import { readInputMenuString } from "./utils";
 
 /**
  * Generates runtime calls for supported looks blocks.
  */
 export function generateLooksBlockCode(
+  target: ScratchTarget,
   block: ScratchBlock,
   spriteVar: string,
 ): string | null {
@@ -18,29 +20,27 @@ export function generateLooksBlockCode(
       return `${spriteVar}.show();`;
     }
     case "looks_switchcostumeto": {
-      // Switch to the costume specified in inputs["COSTUME"]
-      // inputs.COSTUME is [1, costumeName] or [3, blockId] in Scratch. We handle name for now.
-      const costumeInput = block.inputs?.["COSTUME"];
-      let costumeArg = null;
-      if (Array.isArray(costumeInput)) {
-        // [type, value]
-        costumeArg = JSON.stringify(costumeInput[1]);
-      } else {
-        costumeArg = "undefined";
-      }
+      const costumeName = readInputMenuString(
+        target,
+        block.inputs,
+        "COSTUME",
+        "COSTUME",
+      );
+      const costumeArg =
+        costumeName === null ? "undefined" : JSON.stringify(costumeName);
+
       return `${spriteVar}.switchCostumeTo(${costumeArg});`;
     }
     case "looks_switchbackdropto": {
-      // Switch the stage backdrop to the specified name in inputs["BACKDROP"]
-      // inputs.BACKDROP is [1, backdropName] or [3, blockId]. Handle name for now.
-      const backdropInput = block.inputs?.["BACKDROP"];
-      let backdropArg = null;
-      if (Array.isArray(backdropInput)) {
-        // [type, value]
-        backdropArg = JSON.stringify(backdropInput[1]);
-      } else {
-        backdropArg = "undefined";
-      }
+      const backdropName = readInputMenuString(
+        target,
+        block.inputs,
+        "BACKDROP",
+        "BACKDROP",
+      );
+      const backdropArg =
+        backdropName === null ? "undefined" : JSON.stringify(backdropName);
+
       return `myStage.change(${backdropArg});`;
     }
     default:
