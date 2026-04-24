@@ -49,14 +49,16 @@ async function writeMainJsFile(
 /**
  * Generates a simple main.js that loads the project into the canvas using Stage and Sprite.
  * The generated JS is easy to read and understand for kids.
+ * Now also includes event/code blocks for the stage itself.
  */
 function generateMainJs(project: ScratchProject) {
   const stageTarget = findStageTarget(project);
   const stageCtorCode = generateStageCtorCode(stageTarget);
+  const stageBlocksCode = generateStageEventBlocksCode(stageTarget);
   const sprites = findSprites(project);
   const spritesCode = generateSpritesCode(sprites);
 
-  return composeMainJsSource(stageCtorCode, spritesCode);
+  return composeMainJsSource(stageCtorCode, stageBlocksCode, spritesCode);
 }
 
 /** Find the stage target in the project. */
@@ -82,6 +84,15 @@ function generateStageCtorCode(stageTarget?: ScratchTarget): string {
   objFields.push(`isStage: true`);
 
   return `new Stage({ ${objFields.join(", ")} }, "sb3-container")`;
+}
+
+/**
+ * Generate the code string for the stage's events/code blocks.
+ * Uses generateEventBlocksCode, passing in the stage target and variable name "myStage".
+ */
+function generateStageEventBlocksCode(stageTarget?: ScratchTarget): string {
+  if (!stageTarget) return "";
+  return generateEventBlocksCode(stageTarget, "myStage");
 }
 
 /**
@@ -179,6 +190,7 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
 /** Compose the contents of main.js */
 function composeMainJsSource(
   stageCtorCode: string,
+  stageBlocksCode: string,
   spritesCode: string,
 ): string {
   return `
@@ -187,7 +199,10 @@ function composeMainJsSource(
   // Make the stage
   const myStage = ${stageCtorCode};
   myStage.draw();
-  
+
+  // Stage blocks
+  ${stageBlocksCode}
+
   // Make the sprites
   ${spritesCode}
   `;
