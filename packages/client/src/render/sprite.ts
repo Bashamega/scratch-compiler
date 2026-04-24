@@ -231,6 +231,17 @@ export class Sprite {
       this.draw(this.stage);
     }
   }
+  gotoXY(x: number, y: number) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      console.warn(`[Sprite] gotoXY expected finite numbers, received x: ${x}, y: ${y}`);
+      return;
+    }
+    this.data.x = x;
+    this.data.y = y;
+    if (this.stage) {
+      this.draw(this.stage);
+    }
+  }
 
   /**
    * If the sprite is touching the edge of the stage, bounce it back.

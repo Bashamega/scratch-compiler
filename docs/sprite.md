@@ -33,6 +33,9 @@ Updates the sprite's visual representation on the provided `Stage`. This include
 ### `move(steps: number)`
 Moves the sprite forward in its current direction.
 
+### `gotoXY(x: number, y: number)`
+Moves the sprite instantly to the specified (x, y) coordinates on the stage.
+
 ### `turnRight(degrees: number)` / `turnLeft(degrees: number)`
 Rotates the sprite relative to its current direction.
 

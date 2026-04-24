@@ -24,6 +24,11 @@ export function generateMotionBlockCode(
     case "motion_ifonedgebounce": {
       return `${spriteVar}.ifOnEdgeBounce();`;
     }
+    case "motion_gotoxy": {
+      const x = readNumericInput(block.inputs, "X", 0);
+      const y = readNumericInput(block.inputs, "Y", 0);
+      return `${spriteVar}.gotoXY(${x}, ${y});`;
+    }
     default:
       return null;
   }
