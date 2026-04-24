@@ -207,6 +207,32 @@ export class Sprite {
     }
   }
 
+  /**
+   * Switches to a specific costume, by index (number) or name (string).
+   * If provided a string, finds the first costume whose name matches (case-sensitive).
+   * If provided an out-of-bounds index or unknown name, does nothing.
+   */
+  switchCostumeTo(costume: number | string) {
+    if (!Array.isArray(this.data.costumes) || this.data.costumes.length === 0) return;
+
+    let idx = -1;
+    if (typeof costume === "number") {
+      // Clamp to valid range
+      if (Number.isInteger(costume) && costume >= 0 && costume < this.data.costumes.length) {
+        idx = costume;
+      }
+    } else if (typeof costume === "string") {
+      idx = this.data.costumes.findIndex(c => c.name === costume);
+    }
+
+    if (idx >= 0 && idx < this.data.costumes.length) {
+      this.data.currentCostume = idx;
+      if (this.stage) {
+        this.draw(this.stage);
+      }
+    }
+  }
+
   turnRight(degrees: number) {
     this.turnBy(degrees);
   }

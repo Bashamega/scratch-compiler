@@ -17,6 +17,19 @@ export function generateLooksBlockCode(
     case "looks_show": {
       return `${spriteVar}.show();`;
     }
+    case "looks_switchcostumeto": {
+      // Switch to the costume specified in inputs["COSTUME"]
+      // inputs.COSTUME is [1, costumeName] or [3, blockId] in Scratch. We handle name for now.
+      const costumeInput = block.inputs?.["COSTUME"];
+      let costumeArg = null;
+      if (Array.isArray(costumeInput)) {
+        // [type, value]
+        costumeArg = JSON.stringify(costumeInput[1]);
+      } else {
+        costumeArg = "undefined";
+      }
+      return `${spriteVar}.switchCostumeTo(${costumeArg});`;
+    }
     default:
       return null;
   }
