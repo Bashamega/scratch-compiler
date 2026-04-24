@@ -4,6 +4,7 @@ import {Stage as KonvaStage} from "konva/lib/Stage";
 import { Layer as KonvaLayer } from "konva/lib/Layer";
 import { Image as KonvaImage } from "konva/lib/shapes/Image";
 import type { Sprite } from "./sprite";
+import * as events from "../blocks/events"; // <-- IMPORT EVENTS like in sprite.ts
 
 export class Stage {
   stage: ScratchTarget;
@@ -154,6 +155,42 @@ export class Stage {
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
     this.draw(); // auto draw after change
+  }
+
+  /**
+   * Attaches a Scratch event callback to the stage.
+   *
+   * @param eventName The event type (e.g., 'flag')
+   * @param callback The callback function.
+   */
+  on(
+    eventName: "flag",
+    callback: () => void
+  ): void;
+  on(
+    eventName: string,
+    callback: () => void
+  ): void;
+  on(
+    eventName: string,
+    callback: () => void
+  ): void {
+    switch (eventName) {
+      case "flag":
+        if (typeof callback === "function") {
+          events.onFlag(true, callback);
+        } else {
+          console.warn(`[Stage] Callback must be provided for 'flag' event`);
+        }
+        break;
+      default:
+        console.warn(`[Stage] Unknown event type: ${eventName}`);
+    }
+  }
+
+  /** Shortcut for on('flag', ...) */
+  onFlag(callback: () => void) {
+    this.on("flag", callback);
   }
 
   private layoutMonitors() {
