@@ -30,6 +30,19 @@ export function generateLooksBlockCode(
       }
       return `${spriteVar}.switchCostumeTo(${costumeArg});`;
     }
+    case "looks_switchbackdropto": {
+      // Switch the stage backdrop to the specified name in inputs["BACKDROP"]
+      // inputs.BACKDROP is [1, backdropName] or [3, blockId]. Handle name for now.
+      const backdropInput = block.inputs?.["BACKDROP"];
+      let backdropArg = null;
+      if (Array.isArray(backdropInput)) {
+        // [type, value]
+        backdropArg = JSON.stringify(backdropInput[1]);
+      } else {
+        backdropArg = "undefined";
+      }
+      return `myStage.change(${backdropArg});`;
+    }
     default:
       return null;
   }

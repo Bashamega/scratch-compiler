@@ -28,7 +28,7 @@ Renders the current backdrop. It automatically handles SVG or bitmap conversion 
 Changes the current backdrop to the costume with the matching `assetId` and triggers a redraw.
 
 ```typescript
-await stage.change('some-asset-id');
+stage.change('some-asset-id');
 ```
 
 ## Internal Image Caching

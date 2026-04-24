@@ -120,7 +120,7 @@ export class Stage {
     }).catch(console.warn);
   }
 
-  async change(id: string): Promise<void> {
+  change(id: string) {
     const costume = this.stage.costumes.find((c) => c.assetId === id);
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
