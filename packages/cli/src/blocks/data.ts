@@ -110,7 +110,7 @@ export function generateDataBlockCode(
       const ident = resolveVariableIdent(target, spriteVar, variable);
       const primitive = readPrimitiveInput(block.inputs, "VALUE");
       const valueExpr = resolveValueExpression(target, spriteVar, primitive);
-      return `${ident} = ${valueExpr}; myStage.renderVariable(${JSON.stringify(variable.label)}, ${ident});`;
+      return `${ident} = ${valueExpr};`;
     }
     case "data_changevariableby": {
       const variable = getFieldTuple(block.fields, "VARIABLE");
@@ -118,8 +118,7 @@ export function generateDataBlockCode(
       const ident = resolveVariableIdent(target, spriteVar, variable);
       const primitive = readPrimitiveInput(block.inputs, "VALUE");
       const delta = resolveNumericValue(primitive) ?? 0;
-      return `${ident} = (Number(${ident}) || 0) + ${delta}; myStage.renderVariable(${JSON.stringify(variable.label)}, ${ident});`;
- 
+      return `${ident} = (Number(${ident}) || 0) + ${delta};`;
     }
     case "data_showvariable": {
       const name = readFieldString(block.fields, "VARIABLE");

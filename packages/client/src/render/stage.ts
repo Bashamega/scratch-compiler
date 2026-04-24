@@ -53,6 +53,7 @@ export class Stage {
     this.overlay.style.top = "0";
     this.overlay.style.width = "100%";
     this.overlay.style.height = "100%";
+    this.overlay.style.zIndex = "9999";
     this.overlay.style.pointerEvents = "none";
     this.overlay.style.fontFamily =
       "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
@@ -220,7 +221,7 @@ export class Stage {
 
   renderVariable(name: string, value: unknown) {
     const el = this.ensureVariableMonitor(name);
-    if (el.style.display === "none") return;
+    el.style.display = "block";
     el.textContent = `${name}: ${String(value)}`;
     this.layoutMonitors();
   }
@@ -240,7 +241,7 @@ export class Stage {
 
   renderList(name: string, value: unknown) {
     const el = this.ensureListMonitor(name);
-    if (el.style.display === "none") return;
+    el.style.display = "block";
 
     if (Array.isArray(value)) {
       el.textContent = `${name}:\n${value.map((v) => String(v)).join("\n")}`;
