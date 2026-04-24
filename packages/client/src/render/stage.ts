@@ -13,6 +13,10 @@ export class Stage {
   spriteLayer: KonvaLayer;
   backdropImage: KonvaImage;
   sprites: Sprite[] = [];
+  private overlay: HTMLDivElement;
+  private variableMonitors: Map<string, HTMLDivElement> = new Map();
+  private listMonitors: Map<string, HTMLDivElement> = new Map();
+  private monitorOrder: string[] = [];
 
   readonly logicalWidth: number;
   readonly logicalHeight: number;
@@ -33,6 +37,28 @@ export class Stage {
       width: SCRATCH_STAGE_WIDTH,
       height: SCRATCH_STAGE_HEIGHT,
     });
+
+    const containerEl =
+      typeof container === "string"
+        ? (document.getElementById(container) as HTMLDivElement | null)
+        : container;
+    if (!containerEl) {
+      throw new Error(`Container not found: ${String(container)}`);
+    }
+
+    containerEl.style.position = containerEl.style.position || "relative";
+    this.overlay = document.createElement("div");
+    this.overlay.style.position = "absolute";
+    this.overlay.style.left = "0";
+    this.overlay.style.top = "0";
+    this.overlay.style.width = "100%";
+    this.overlay.style.height = "100%";
+    this.overlay.style.pointerEvents = "none";
+    this.overlay.style.fontFamily =
+      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+    this.overlay.style.fontSize = "12px";
+    this.overlay.style.color = "#111";
+    containerEl.appendChild(this.overlay);
 
     this.backdropLayer = new KonvaLayer();
     this.spriteLayer = new KonvaLayer();
@@ -127,5 +153,100 @@ export class Stage {
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
     this.draw(); // auto draw after change
+  }
+
+  private layoutMonitors() {
+    let y = 6;
+    for (const key of this.monitorOrder) {
+      const el = this.variableMonitors.get(key) ?? this.listMonitors.get(key);
+      if (!el || el.style.display === "none") continue;
+      el.style.left = "6px";
+      el.style.top = `${y}px`;
+      y += el.getBoundingClientRect().height + 6;
+    }
+  }
+
+  private ensureVariableMonitor(name: string): HTMLDivElement {
+    const existing = this.variableMonitors.get(name);
+    if (existing) return existing;
+
+    const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.padding = "4px 6px";
+    el.style.background = "rgba(255,255,255,0.85)";
+    el.style.border = "1px solid rgba(0,0,0,0.15)";
+    el.style.borderRadius = "6px";
+    el.style.whiteSpace = "pre";
+    el.style.display = "none";
+
+    this.overlay.appendChild(el);
+    this.variableMonitors.set(name, el);
+    this.monitorOrder.push(name);
+    return el;
+  }
+
+  private ensureListMonitor(name: string): HTMLDivElement {
+    const existing = this.listMonitors.get(name);
+    if (existing) return existing;
+
+    const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.padding = "4px 6px";
+    el.style.background = "rgba(255,255,255,0.85)";
+    el.style.border = "1px solid rgba(0,0,0,0.15)";
+    el.style.borderRadius = "6px";
+    el.style.whiteSpace = "pre";
+    el.style.maxWidth = "220px";
+    el.style.display = "none";
+
+    this.overlay.appendChild(el);
+    this.listMonitors.set(name, el);
+    this.monitorOrder.push(name);
+    return el;
+  }
+
+  showVariable(name: string) {
+    const el = this.ensureVariableMonitor(name);
+    el.style.display = "block";
+    this.layoutMonitors();
+  }
+
+  hideVariable(name: string) {
+    const el = this.variableMonitors.get(name);
+    if (!el) return;
+    el.style.display = "none";
+    this.layoutMonitors();
+  }
+
+  renderVariable(name: string, value: unknown) {
+    const el = this.ensureVariableMonitor(name);
+    if (el.style.display === "none") return;
+    el.textContent = `${name}: ${String(value)}`;
+    this.layoutMonitors();
+  }
+
+  showList(name: string) {
+    const el = this.ensureListMonitor(name);
+    el.style.display = "block";
+    this.layoutMonitors();
+  }
+
+  hideList(name: string) {
+    const el = this.listMonitors.get(name);
+    if (!el) return;
+    el.style.display = "none";
+    this.layoutMonitors();
+  }
+
+  renderList(name: string, value: unknown) {
+    const el = this.ensureListMonitor(name);
+    if (el.style.display === "none") return;
+
+    if (Array.isArray(value)) {
+      el.textContent = `${name}:\n${value.map((v) => String(v)).join("\n")}`;
+    } else {
+      el.textContent = `${name}: ${String(value)}`;
+    }
+    this.layoutMonitors();
   }
 }

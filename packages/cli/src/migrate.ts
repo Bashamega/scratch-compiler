@@ -8,6 +8,7 @@ import { join } from "path";
 import { fromBuffer, Entry, ZipFile } from "yauzl";
 import { formatJsString } from "./format";
 import { generateEventBlocksCode } from "./blocks";
+import { sanitizeIdentifier } from "./ident";
 
 /**
  * Migrates a Scratch project by copying static assets, extracting project.json,
@@ -55,10 +56,24 @@ function generateMainJs(project: ScratchProject) {
   const stageTarget = findStageTarget(project);
   const stageCtorCode = generateStageCtorCode(stageTarget);
   const stageBlocksCode = generateStageEventBlocksCode(stageTarget);
+  const stageVarsCode = generateStageVariablesCode(stageTarget);
+  const stageListsCode = generateStageListsCode(stageTarget);
   const sprites = findSprites(project);
-  const spritesCode = generateSpritesCode(sprites);
+  const { spritesCode, spriteNameToVar } = generateSpritesCode(sprites);
+  const monitorsCode = generateVisibleMonitorsCode(
+    project,
+    stageTarget,
+    spriteNameToVar,
+  );
 
-  return composeMainJsSource(stageCtorCode, stageBlocksCode, spritesCode);
+  return composeMainJsSource(
+    stageVarsCode,
+    stageListsCode,
+    stageCtorCode,
+    stageBlocksCode,
+    spritesCode,
+    monitorsCode,
+  );
 }
 
 /** Find the stage target in the project. */
@@ -99,11 +114,14 @@ function generateStageEventBlocksCode(stageTarget?: ScratchTarget): string {
  * Generate the code string for all Sprites.
  * Handles duplicate variable names by appending a number suffix.
  */
-function generateSpritesCode(sprites: ScratchTarget[]): string {
+function generateSpritesCode(sprites: ScratchTarget[]): {
+  spritesCode: string;
+  spriteNameToVar: Record<string, string>;
+} {
   const nameCounter: Record<string, number> = {};
-  const declaredVars: string[] = [];
+  const spriteNameToVar: Record<string, string> = {};
 
-  return sprites
+  const spritesCode = sprites
     .map((sprite) => {
       const costumesCode = generateCostumesArrayCode(sprite.costumes ?? []);
       // Add all sprite properties as object fields
@@ -125,7 +143,7 @@ function generateSpritesCode(sprites: ScratchTarget[]): string {
       );
 
       // Sanitize sprite name and deduplicate variable
-      let spriteVarBase = sanitizeVariableName(sprite.name);
+      let spriteVarBase = sanitizeIdentifier(sprite.name);
       let spriteVar = spriteVarBase;
       if (nameCounter[spriteVarBase] == null) {
         nameCounter[spriteVarBase] = 1;
@@ -133,40 +151,164 @@ function generateSpritesCode(sprites: ScratchTarget[]): string {
         nameCounter[spriteVarBase]++;
         spriteVar = `${spriteVarBase}${nameCounter[spriteVarBase]}`;
       }
-      declaredVars.push(spriteVar);
+      spriteNameToVar[sprite.name] = spriteVar;
 
+      const localVarsCode = generateTargetLocalVariablesCode(sprite, spriteVar);
+      const localListsCode = generateTargetLocalListsCode(sprite, spriteVar);
       const eventsCode = generateEventBlocksCode(sprite, spriteVar);
 
       return `
       const ${spriteVar} = new Sprite({ ${objFields.join(", ")} }); 
       ${spriteVar}.draw(myStage);
+      ${localVarsCode}
+      ${localListsCode}
       ${eventsCode}`;
     })
     .join("\n");
+
+  return { spritesCode, spriteNameToVar };
 }
 
-/** Sanitize sprite names for JS variable names */
-function sanitizeVariableName(name: string): string {
-  if (!name) return "_";
+function toJsLiteral(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "string") return JSON.stringify(value);
+  if (value === null) return "null";
+  return JSON.stringify(value);
+}
 
-  const words = name
-    .trim()
-    .replace(/[^a-zA-Z0-9]+/g, " ") // normalize separators
-    .split(" ")
-    .filter(Boolean);
+function generateStageVariablesCode(stageTarget?: ScratchTarget): string {
+  if (!stageTarget) return "";
+  const entries = Object.values(stageTarget.variables ?? {});
+  if (entries.length === 0) return "";
 
-  if (words.length === 0) return "_";
+  const lines = entries.map((tuple) => {
+    const name = Array.isArray(tuple) ? String(tuple[0] ?? "") : "";
+    const value = Array.isArray(tuple) ? tuple[1] : undefined;
+    const ident = sanitizeIdentifier(name);
+    return `let ${ident} = ${toJsLiteral(value)};`;
+  });
 
-  const camel = words
-    .map((word, index) => {
-      const lower = word.toLowerCase();
-      if (index === 0) return lower;
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join("");
+  return `// Global variables\n${lines.join("\n")}`;
+}
 
-  // Ensure valid JS identifier (no leading number)
-  return /^[0-9]/.test(camel) ? `_${camel}` : camel;
+function generateStageListsCode(stageTarget?: ScratchTarget): string {
+  if (!stageTarget) return "";
+  const entries = Object.values(stageTarget.lists ?? {});
+  if (entries.length === 0) return "";
+
+  const lines = entries.map((tuple) => {
+    const name = Array.isArray(tuple) ? String(tuple[0] ?? "") : "";
+    const value = Array.isArray(tuple) ? tuple[1] : undefined;
+    const ident = sanitizeIdentifier(name);
+    const initial =
+      Array.isArray(value) ? JSON.stringify(value) : JSON.stringify([]);
+    return `let ${ident} = ${initial};`;
+  });
+
+  return `// Global lists\n${lines.join("\n")}`;
+}
+
+function generateTargetLocalVariablesCode(
+  target: ScratchTarget,
+  spriteVar: string,
+): string {
+  const entries = Object.values(target.variables ?? {});
+  if (entries.length === 0) return "";
+
+  const lines = entries.map((tuple) => {
+    const name = Array.isArray(tuple) ? String(tuple[0] ?? "") : "";
+    const value = Array.isArray(tuple) ? tuple[1] : undefined;
+    const ident = `${spriteVar}_${sanitizeIdentifier(name)}`;
+    return `let ${ident} = ${toJsLiteral(value)};`;
+  });
+
+  return `// ${spriteVar} local variables\n${lines.join("\n")}`;
+}
+
+function generateTargetLocalListsCode(
+  target: ScratchTarget,
+  spriteVar: string,
+): string {
+  const entries = Object.values(target.lists ?? {});
+  if (entries.length === 0) return "";
+
+  const lines = entries.map((tuple) => {
+    const name = Array.isArray(tuple) ? String(tuple[0] ?? "") : "";
+    const value = Array.isArray(tuple) ? tuple[1] : undefined;
+    const ident = `${spriteVar}_${sanitizeIdentifier(name)}`;
+    const initial =
+      Array.isArray(value) ? JSON.stringify(value) : JSON.stringify([]);
+    return `let ${ident} = ${initial};`;
+  });
+
+  return `// ${spriteVar} local lists\n${lines.join("\n")}`;
+}
+
+function generateVisibleMonitorsCode(
+  project: ScratchProject,
+  stageTarget: ScratchTarget | undefined,
+  spriteNameToVar: Record<string, string>,
+): string {
+  const monitors = project.monitors ?? [];
+  if (!Array.isArray(monitors) || monitors.length === 0) return "";
+
+  const stageVarNames = new Set<string>();
+  if (stageTarget?.variables) {
+    for (const tuple of Object.values(stageTarget.variables)) {
+      if (Array.isArray(tuple) && typeof tuple[0] === "string") {
+        stageVarNames.add(tuple[0]);
+      }
+    }
+  }
+  const stageListNames = new Set<string>();
+  if (stageTarget?.lists) {
+    for (const tuple of Object.values(stageTarget.lists)) {
+      if (Array.isArray(tuple) && typeof tuple[0] === "string") {
+        stageListNames.add(tuple[0]);
+      }
+    }
+  }
+
+  const lines: string[] = [];
+  for (const monitor of monitors) {
+    if (!monitor || typeof monitor !== "object") continue;
+    if ((monitor as any).visible !== true) continue;
+
+    const opcode = (monitor as any).opcode;
+    const params = (monitor as any).params ?? {};
+    const spriteName = (monitor as any).spriteName ?? null;
+
+    if (opcode === "data_variable") {
+      const varName = params.VARIABLE;
+      if (typeof varName !== "string") continue;
+
+      const isGlobal = spriteName === null || stageVarNames.has(varName);
+      const ident = isGlobal
+        ? sanitizeIdentifier(varName)
+        : `${spriteNameToVar[String(spriteName)] ?? "sprite"}_${sanitizeIdentifier(varName)}`;
+
+      lines.push(`myStage.showVariable(${JSON.stringify(varName.replace(/_/g, " "))});`);
+      lines.push(`myStage.renderVariable(${JSON.stringify(varName.replace(/_/g, " "))}, ${ident});`);
+ 
+    }
+
+    if (opcode === "data_listcontents") {
+      const listName = params.LIST;
+      if (typeof listName !== "string") continue;
+
+      const isGlobal = spriteName === null || stageListNames.has(listName);
+      const ident = isGlobal
+        ? sanitizeIdentifier(listName)
+        : `${spriteNameToVar[String(spriteName)] ?? "sprite"}_${sanitizeIdentifier(listName)}`;
+
+      lines.push(`myStage.showList(${JSON.stringify(listName)});`);
+      lines.push(`myStage.renderList(${JSON.stringify(listName)}, ${ident});`);
+    }
+  }
+
+  if (lines.length === 0) return "";
+  return `// Visible variable/list monitors\n${lines.join("\n")}`;
 }
 
 /** Generate the code string for a costumes array. */
@@ -189,12 +331,18 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
 
 /** Compose the contents of main.js */
 function composeMainJsSource(
+  stageVarsCode: string,
+  stageListsCode: string,
   stageCtorCode: string,
   stageBlocksCode: string,
   spritesCode: string,
+  monitorsCode: string,
 ): string {
   return `
   import { Stage, Sprite } from "./engine.min.js";
+
+  ${stageVarsCode}
+  ${stageListsCode}
   
   // Make the stage
   const myStage = ${stageCtorCode};
@@ -205,6 +353,8 @@ function composeMainJsSource(
 
   // Make the sprites
   ${spritesCode}
+
+  ${monitorsCode}
   `;
 }
 
