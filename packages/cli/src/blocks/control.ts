@@ -50,6 +50,7 @@ ${hasAwaitDelay ? '' : '  await new Promise(resolve => setTimeout(resolve, 200))
         if (lines.length === 1) {
           const line = lines[0].trim();
           if (line.startsWith("//")) {
+            console.warn("NOT SUPPORTED: " + line)
             // The condition block only generated a comment (unsupported block), so treat condition as false
             return "false";
     

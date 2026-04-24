@@ -3,6 +3,7 @@ import { generateMotionBlockCode } from "../motion";
 import { generateControlBlockCode } from "../control";
 import { generateLooksBlockCode } from "../looks";
 import { generateSensingBlockCode } from "../sensing";
+import { generateOperatorBlockCode } from "../operator";
 
 /**
  * Step through a chain of Scratch blocks, returning the generated code.
@@ -66,6 +67,8 @@ export function generateBlockCode(
       return generateLooksBlockCode(target, block, spriteVar);
     case "sensing":
       return generateSensingBlockCode(target, block, spriteVar);
+    case "operator":
+      return generateOperatorBlockCode(target, block, spriteVar);
     case "control":
       return generateControlBlockCode(
         target,
