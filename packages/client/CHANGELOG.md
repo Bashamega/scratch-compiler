@@ -1,5 +1,11 @@
 # @scratch-compiler/client
 
+## 1.0.0
+
+### Major Changes
+
+- 32824b8: implement basic event handling for sprites and stages, including broadcast support and event bus integration
+
 ## 0.1.1
 
 ### Patch Changes
