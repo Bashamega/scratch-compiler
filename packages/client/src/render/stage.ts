@@ -7,6 +7,7 @@ import type { Sprite } from "./sprite";
 import * as events from "../blocks/events"; // <-- IMPORT EVENTS like in sprite.ts
 import { MonitorOverlay } from "./monitorOverlay";
 import { loadCostumeImage } from "./costumeImage";
+import { ScratchEventBus, type ScratchEventHandler } from "../events/eventBus";
 
 export class Stage {
   stage: ScratchTarget;
@@ -17,6 +18,7 @@ export class Stage {
   backdropImage: KonvaImage;
   sprites: Sprite[] = [];
   private monitors: MonitorOverlay;
+  private eventBus = new ScratchEventBus();
 
   readonly logicalWidth: number;
   readonly logicalHeight: number;
@@ -62,6 +64,14 @@ export class Stage {
     if (!this.sprites.includes(sprite)) {
       this.sprites.push(sprite);
     }
+  }
+
+  broadcast(name: string) {
+    this.eventBus.broadcast(name);
+  }
+
+  broadcastAndWait(name: string) {
+    return this.eventBus.broadcastAndWait(name);
   }
 
   /** Kid-friendly draw: draws immediately if possible, otherwise auto on image load */
@@ -116,32 +126,54 @@ export class Stage {
    */
   on(
     eventName: "flag",
-    callback: () => void
+    callback: ScratchEventHandler
+  ): void;
+  on(
+    eventName: "broadcast",
+    message: string,
+    callback: ScratchEventHandler
   ): void;
   on(
     eventName: string,
-    callback: () => void
+    ...args: unknown[]
   ): void;
   on(
     eventName: string,
-    callback: () => void
+    ...args: unknown[]
   ): void {
     switch (eventName) {
       case "flag":
-        if (typeof callback === "function") {
-          events.onFlag(true, callback);
+        if (typeof args[0] === "function") {
+          events.onFlag(true, args[0] as ScratchEventHandler);
         } else {
           console.warn(`[Stage] Callback must be provided for 'flag' event`);
         }
         break;
+      case "broadcast": {
+        const message = args[0];
+        const callback = args[1];
+        if (typeof message === "string" && typeof callback === "function") {
+          this.eventBus.onBroadcast(message, callback as ScratchEventHandler);
+        } else {
+          console.warn(
+            `[Stage] For 'broadcast', provide a message and a callback: on('broadcast', message, callback)`,
+          );
+        }
+        break;
+      }
       default:
         console.warn(`[Stage] Unknown event type: ${eventName}`);
     }
   }
 
   /** Shortcut for on('flag', ...) */
-  onFlag(callback: () => void) {
+  onFlag(callback: ScratchEventHandler) {
     this.on("flag", callback);
+  }
+
+  /** Shortcut for on('broadcast', message, ...) */
+  onBroadcast(message: string, callback: ScratchEventHandler) {
+    this.on("broadcast", message, callback);
   }
 
   showVariable(name: string) {

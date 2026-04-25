@@ -2,7 +2,10 @@
  * Attaches a green flag event handler.
  * Green flag is a global event triggered when the game starts.
  */
-export function onFlag(isReady: boolean, callback: () => void) {
+export function onFlag(
+  isReady: boolean,
+  callback: () => void | Promise<void>,
+) {
   if (isReady) {
     callback();
   } else {

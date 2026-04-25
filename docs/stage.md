@@ -31,5 +31,17 @@ Changes the current backdrop to the costume with the matching `assetId` and trig
 stage.change('some-asset-id');
 ```
 
+## Event Handling
+
+The `Stage` supports Scratch-style events via `on(...)`:
+
+- `on('flag', callback)` – runs when the green flag is clicked (start).
+- `on('broadcast', message, callback)` – runs when `message` is broadcast.
+
+It also supports emitting broadcasts:
+
+- `broadcast(message)` – fire-and-forget.
+- `broadcastAndWait(message)` – returns a promise that resolves when all matching broadcast handlers finish.
+
 ## Internal Image Caching
 The `Stage` class maintains a static image cache to ensure that assets used by multiple sprites or shared between backdrop changes are only loaded once.

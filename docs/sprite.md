@@ -17,8 +17,10 @@ Sprites provide an `on` method to wire up logic to Scratch events:
 - `on('click', callback)`
 - `on('flag', callback)`
 - `on('keypress', key, callback)`
+- `on('broadcast', message, callback)`
 
 Shortcut methods are also available: `onClick(cb)`, `onFlag(cb)`, `onKeyPress(key, cb)`.
+Broadcast shortcuts are also available: `onBroadcast(message, cb)`, `broadcast(message)`, `broadcastAndWait(message)`.
 
 ## Methods
 

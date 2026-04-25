@@ -4,6 +4,7 @@ import type { Stage } from "./stage";
 import { Image as KonvaImage } from "konva/lib/shapes/Image";
 import * as events from "../blocks/events";
 import { loadCostumeImage } from "./costumeImage";
+import type { ScratchEventHandler } from "../events/eventBus";
 
 export class Sprite {
   data: ScratchTarget;
@@ -23,17 +24,22 @@ export class Sprite {
    */
   on(
     eventName: "click" | "flag",
-    callback: () => void
+    callback: ScratchEventHandler
   ): void;
   on(
     eventName: "keypress",
     key: string,
-    callback: () => void
+    callback: ScratchEventHandler
   ): void;
   on(
-    eventName: "click" | "flag" | "keypress",
-    keyOrCallback: string | (() => void),
-    maybeCallback?: () => void
+    eventName: "broadcast",
+    message: string,
+    callback: ScratchEventHandler
+  ): void;
+  on(
+    eventName: "click" | "flag" | "keypress" | "broadcast",
+    keyOrCallback: string | ScratchEventHandler,
+    maybeCallback?: ScratchEventHandler
   ): void {
     switch (eventName) {
       case "click":
@@ -57,26 +63,62 @@ export class Sprite {
           console.warn(`[Sprite] For 'keypress', provide a key and a callback: on('keypress', key, callback)`);
         }
         break;
+      case "broadcast":
+        if (typeof keyOrCallback === "string" && typeof maybeCallback === "function") {
+          if (!this.stage) {
+            console.warn(
+              `[Sprite] Cannot register broadcast handler before draw(stage) attaches sprite to a stage`,
+            );
+            break;
+          }
+          this.stage.on("broadcast", keyOrCallback, maybeCallback);
+        } else {
+          console.warn(
+            `[Sprite] For 'broadcast', provide a message and a callback: on('broadcast', message, callback)`,
+          );
+        }
+        break;
       default:
         console.warn(`[Sprite] Unknown event type: ${eventName}`);
     }
   }
 
   /** Shortcut for on('click', ...) */
-  onClick(callback: () => void) {
+  onClick(callback: ScratchEventHandler) {
     this.on("click", callback);
   }
 
   /** Shortcut for on('flag', ...) */
-  onFlag(callback: () => void) {
+  onFlag(callback: ScratchEventHandler) {
     this.on("flag", callback);
   }
 
   /**
    * Shortcut for on('keypress', key, callback)
    */
-  onKeyPress(key: string, callback: () => void) {
+  onKeyPress(key: string, callback: ScratchEventHandler) {
     this.on("keypress", key, callback);
+  }
+
+  /** Shortcut for on('broadcast', message, callback) */
+  onBroadcast(message: string, callback: ScratchEventHandler) {
+    this.on("broadcast", message, callback);
+  }
+
+  broadcast(message: string) {
+    if (!this.stage) {
+      console.warn(`[Sprite] Cannot broadcast before draw(stage) attaches sprite to a stage`);
+      return;
+    }
+    this.stage.broadcast(message);
+  }
+
+  broadcastAndWait(message: string) {
+    if (!this.stage) {
+      console.warn(`[Sprite] Cannot broadcastAndWait before draw(stage) attaches sprite to a stage`);
+      return Promise.resolve();
+    }
+    return this.stage.broadcastAndWait(message);
   }
 
   constructor(data: ScratchTarget) {

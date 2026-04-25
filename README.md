@@ -33,6 +33,7 @@ The project is currently in early development.
 - [x] Migration of project structure (Stage and Sprite initial states).
 - [x] Generation of a readable `main.js` file.
 - [x] Basic rendering engine using Konva.js.
+- [x] Basic events (flag, click, keypress, broadcast).
 - [x] Monorepo setup with optimized build pipeline (esbuild + TSC).
 
 ### In Progress / Roadmap

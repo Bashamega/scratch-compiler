@@ -1,11 +1,17 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
-import { generateSequenceCode, readFieldString, unsupportedSequenceComment } from "./handlers";
+import {
+  generateSequenceCode,
+  readFieldString,
+  unsupportedSequenceComment,
+} from "./handlers";
 
 /**
  * Generates event handling code for a Scratch target.
  * Currently supports:
  * - Green flag clicked (event_whenflagclicked)
  * - Sprite clicked (event_whenthisspriteclicked)
+ * - Key pressed (event_whenkeypressed)
+ * - Broadcast received (event_whenbroadcastreceived)
  */
 export function generateEventBlocksCode(
   target: ScratchTarget,
@@ -38,6 +44,13 @@ function generateTopLevelEventCode(
       const keyOption = readFieldString(block.fields, "KEY_OPTION") ?? "space";
       return `${spriteVar}.on("keypress", ${JSON.stringify(keyOption)}, async () => {
   // ${block.opcode} (${keyOption})
+${sequenceCode || unsupportedSequenceComment(blockId)}
+});`;
+    }
+    case "event_whenbroadcastreceived": {
+      const name = readFieldString(block.fields, "BROADCAST_OPTION") ?? "";
+      return `${spriteVar}.on("broadcast", ${JSON.stringify(name)}, async () => {
+  // ${block.opcode} (${name})
 ${sequenceCode || unsupportedSequenceComment(blockId)}
 });`;
     }

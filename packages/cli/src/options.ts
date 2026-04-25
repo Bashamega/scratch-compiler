@@ -9,7 +9,8 @@ export interface CliOptions {
 }
 
 export async function resolveCliOptions(args: string[]): Promise<CliOptions> {
-  const [file, providedOutputDirectory] = args;
+  const normalizedArgs = args[0] === "--" ? args.slice(1) : args;
+  const [file, providedOutputDirectory] = normalizedArgs;
 
   if (!file) {
     throw new Error("Usage: scratch-compile <file.sb3> [output-directory]");

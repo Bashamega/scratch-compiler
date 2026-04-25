@@ -5,6 +5,7 @@ import { generateLooksBlockCode } from "../looks";
 import { generateSensingBlockCode } from "../sensing";
 import { generateOperatorBlockCode } from "../operator";
 import { generateDataBlockCode } from "../data";
+import { generateEventStackBlockCode } from "../event-stack";
 
 /**
  * Step through a chain of Scratch blocks, returning the generated code.
@@ -79,6 +80,8 @@ export function generateBlockCode(
         spriteVar,
         generateSequenceCode,
       );
+    case "event":
+      return generateEventStackBlockCode(target, block, spriteVar);
     default:
       return null;
   }

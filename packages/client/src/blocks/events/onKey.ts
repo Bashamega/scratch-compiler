@@ -16,7 +16,7 @@ function mapScratchKeyToDomKey(scratchKey: string): string | null {
   return keyMap[normalized] ?? normalized;
 }
 
-export function onKey(key: string, callback: () => void) {
+export function onKey(key: string, callback: () => void | Promise<void>) {
   const normalizedScratchKey = key.trim().toLowerCase();
   const domKey = mapScratchKeyToDomKey(normalizedScratchKey);
 
