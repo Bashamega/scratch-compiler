@@ -1,5 +1,11 @@
 # @scratch-compiler/cli
 
+## 2.0.0
+
+### Major Changes
+
+- 284ae8f: feat: enhance operator block code generation to support data variable and list contents expressions
+
 ## 1.0.0
 
 ### Major Changes
