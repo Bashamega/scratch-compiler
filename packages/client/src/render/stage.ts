@@ -8,6 +8,7 @@ import * as events from "../blocks/events"; // <-- IMPORT EVENTS like in sprite.
 import { MonitorOverlay } from "./monitorOverlay";
 import { loadCostumeImage } from "./costumeImage";
 import { ScratchEventBus, type ScratchEventHandler } from "../events/eventBus";
+import { AskAndWaitComponent } from "../components/ask-and-wait";
 
 export class Stage {
   stage: ScratchTarget;
@@ -18,6 +19,7 @@ export class Stage {
   backdropImage: KonvaImage;
   sprites: Sprite[] = [];
   private monitors: MonitorOverlay;
+  private askAndWaitComponent: AskAndWaitComponent;
   private eventBus = new ScratchEventBus();
 
   readonly logicalWidth: number;
@@ -46,6 +48,7 @@ export class Stage {
     }
 
     this.monitors = new MonitorOverlay(containerEl);
+    this.askAndWaitComponent = new AskAndWaitComponent(containerEl);
 
     this.backdropLayer = new KonvaLayer();
     this.spriteLayer = new KonvaLayer();
@@ -72,6 +75,14 @@ export class Stage {
 
   broadcastAndWait(name: string) {
     return this.eventBus.broadcastAndWait(name);
+  }
+
+  askAndWait(question: string): Promise<string> {
+    return this.askAndWaitComponent.askAndWait(question);
+  }
+
+  get answer(): string {
+    return this.askAndWaitComponent.answer;
   }
 
   /** Kid-friendly draw: draws immediately if possible, otherwise auto on image load */
