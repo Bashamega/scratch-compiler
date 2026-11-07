@@ -1,6 +1,6 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
 import { readInputBlockId, readFieldString } from "./utils";
-import { sanitizeIdentifier } from "../ident";
+import { resolveTargetIdentifier } from "../ident";
 import { generateOperatorBlockCode } from "./operator";
 
 function resolveQuestionExpression(
@@ -16,13 +16,13 @@ function resolveQuestionExpression(
     if (value[0] === 12 && typeof value[1] === "string") {
       const name = value[1];
       const id = typeof value[2] === "string" ? value[2] : null;
-      const isLocal =
-        !target.isStage &&
-        id != null &&
-        Object.prototype.hasOwnProperty.call(target.variables ?? {}, id);
-      return isLocal
-        ? `${spriteVar}_${sanitizeIdentifier(name)}`
-        : sanitizeIdentifier(name);
+      return resolveTargetIdentifier(
+        target,
+        spriteVar,
+        name,
+        id,
+        "variable",
+      );
     }
     if (typeof value[1] === "string") return JSON.stringify(value[1]);
     if (typeof value[1] === "number" && Number.isFinite(value[1])) {
@@ -42,13 +42,13 @@ function resolveQuestionExpression(
       return JSON.stringify("");
     }
     const id = typeof field[1] === "string" ? field[1] : null;
-    const isLocal =
-      !target.isStage &&
-      id != null &&
-      Object.prototype.hasOwnProperty.call(target.variables ?? {}, id);
-    return isLocal
-      ? `${spriteVar}_${sanitizeIdentifier(field[0])}`
-      : sanitizeIdentifier(field[0]);
+    return resolveTargetIdentifier(
+      target,
+      spriteVar,
+      field[0],
+      id,
+      "variable",
+    );
   }
   if (questionBlock.opcode === "sensing_answer") return "myStage.answer";
   if (questionBlock.opcode.startsWith("operator_")) {

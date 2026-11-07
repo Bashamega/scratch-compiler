@@ -1,5 +1,5 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
-import { sanitizeIdentifier } from "../ident";
+import { resolveTargetIdentifier } from "../ident";
 import { readFieldString, resolveNumericValue } from "./utils";
 import { generateOperatorBlockCode } from "./operator";
 import { generateSensingBlockCode } from "./sensing";
@@ -21,12 +21,13 @@ function resolveVariableIdent(
   spriteVar: string,
   variable: { label: string; id: string },
 ): string {
-  const isLocal =
-    !target.isStage &&
-    Object.prototype.hasOwnProperty.call(target.variables ?? {}, variable.id);
-  return isLocal
-    ? `${spriteVar}_${sanitizeIdentifier(variable.label)}`
-    : sanitizeIdentifier(variable.label);
+  return resolveTargetIdentifier(
+    target,
+    spriteVar,
+    variable.label,
+    variable.id,
+    "variable",
+  );
 }
 
 function resolveListIdent(
@@ -34,12 +35,7 @@ function resolveListIdent(
   spriteVar: string,
   list: { label: string; id: string },
 ): string {
-  const isLocal =
-    !target.isStage &&
-    Object.prototype.hasOwnProperty.call(target.lists ?? {}, list.id);
-  return isLocal
-    ? `${spriteVar}_${sanitizeIdentifier(list.label)}`
-    : sanitizeIdentifier(list.label);
+  return resolveTargetIdentifier(target, spriteVar, list.label, list.id, "list");
 }
 
 function readPrimitiveInput(inputs: ScratchBlock["inputs"], name: string): unknown {
