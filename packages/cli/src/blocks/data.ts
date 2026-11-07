@@ -21,10 +21,9 @@ function resolveVariableIdent(
   spriteVar: string,
   variable: { label: string; id: string },
 ): string {
-  const isLocal = Object.prototype.hasOwnProperty.call(
-    target.variables ?? {},
-    variable.id,
-  );
+  const isLocal =
+    !target.isStage &&
+    Object.prototype.hasOwnProperty.call(target.variables ?? {}, variable.id);
   return isLocal
     ? `${spriteVar}_${sanitizeIdentifier(variable.label)}`
     : sanitizeIdentifier(variable.label);
@@ -35,10 +34,9 @@ function resolveListIdent(
   spriteVar: string,
   list: { label: string; id: string },
 ): string {
-  const isLocal = Object.prototype.hasOwnProperty.call(
-    target.lists ?? {},
-    list.id,
-  );
+  const isLocal =
+    !target.isStage &&
+    Object.prototype.hasOwnProperty.call(target.lists ?? {}, list.id);
   return isLocal
     ? `${spriteVar}_${sanitizeIdentifier(list.label)}`
     : sanitizeIdentifier(list.label);
