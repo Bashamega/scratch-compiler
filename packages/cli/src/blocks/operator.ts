@@ -53,6 +53,7 @@ function resolveVariableIdent(
   variableId: string | null,
 ): string {
   const isLocal =
+    !target.isStage &&
     variableId != null &&
     Object.prototype.hasOwnProperty.call(target.variables ?? {}, variableId);
   return isLocal
@@ -67,6 +68,7 @@ function resolveListIdent(
   listId: string | null,
 ): string {
   const isLocal =
+    !target.isStage &&
     listId != null &&
     Object.prototype.hasOwnProperty.call(target.lists ?? {}, listId);
   return isLocal

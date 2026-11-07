@@ -17,6 +17,7 @@ function resolveQuestionExpression(
       const name = value[1];
       const id = typeof value[2] === "string" ? value[2] : null;
       const isLocal =
+        !target.isStage &&
         id != null &&
         Object.prototype.hasOwnProperty.call(target.variables ?? {}, id);
       return isLocal
@@ -42,6 +43,7 @@ function resolveQuestionExpression(
     }
     const id = typeof field[1] === "string" ? field[1] : null;
     const isLocal =
+      !target.isStage &&
       id != null &&
       Object.prototype.hasOwnProperty.call(target.variables ?? {}, id);
     return isLocal
