@@ -10,10 +10,40 @@ export interface CliOptions {
 
 export async function resolveCliOptions(args: string[]): Promise<CliOptions> {
   const normalizedArgs = args[0] === "--" ? args.slice(1) : args;
-  const [file, providedOutputDirectory] = normalizedArgs;
+  const positionalArgs: string[] = [];
+  let fileOption: string | undefined;
+  let outputOption: string | undefined;
+
+  for (let i = 0; i < normalizedArgs.length; i++) {
+    const arg = normalizedArgs[i];
+
+    if (arg === "--file" || arg === "--output") {
+      const value = normalizedArgs[++i];
+      if (!value || value.startsWith("--")) {
+        throw new Error(
+          "Usage: scratch-compile [--file] <file.sb3> [--output] <output-directory>",
+        );
+      }
+
+      if (arg === "--file") {
+        fileOption = value;
+      } else {
+        outputOption = value;
+      }
+    } else if (arg.startsWith("-")) {
+      throw new Error(`Unknown option: ${arg}`);
+    } else {
+      positionalArgs.push(arg);
+    }
+  }
+
+  const file = fileOption ?? positionalArgs[0];
+  const providedOutputDirectory = outputOption ?? positionalArgs[1];
 
   if (!file) {
-    throw new Error("Usage: scratch-compile <file.sb3> [output-directory]");
+    throw new Error(
+      "Usage: scratch-compile [--file] <file.sb3> [--output] <output-directory>",
+    );
   }
 
   if (extname(file).toLowerCase() !== ".sb3") {
