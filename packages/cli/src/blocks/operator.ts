@@ -1,7 +1,7 @@
 import type { ScratchBlock, ScratchTarget } from "@scratch-compiler/types";
 import { generateSensingBlockCode } from "./sensing";
 import { readInputBlockId } from "./utils";
-import { sanitizeIdentifier } from "../ident";
+import { resolveTargetIdentifier } from "../ident";
 
 function generateBooleanExpressionFromBlockId(
   target: ScratchTarget,
@@ -52,12 +52,13 @@ function resolveVariableIdent(
   variableName: string,
   variableId: string | null,
 ): string {
-  const isLocal =
-    variableId != null &&
-    Object.prototype.hasOwnProperty.call(target.variables ?? {}, variableId);
-  return isLocal
-    ? `${spriteVar}_${sanitizeIdentifier(variableName)}`
-    : sanitizeIdentifier(variableName);
+  return resolveTargetIdentifier(
+    target,
+    spriteVar,
+    variableName,
+    variableId,
+    "variable",
+  );
 }
 
 function resolveListIdent(
@@ -66,12 +67,7 @@ function resolveListIdent(
   listName: string,
   listId: string | null,
 ): string {
-  const isLocal =
-    listId != null &&
-    Object.prototype.hasOwnProperty.call(target.lists ?? {}, listId);
-  return isLocal
-    ? `${spriteVar}_${sanitizeIdentifier(listName)}`
-    : sanitizeIdentifier(listName);
+  return resolveTargetIdentifier(target, spriteVar, listName, listId, "list");
 }
 
 function resolveOperandExpression(

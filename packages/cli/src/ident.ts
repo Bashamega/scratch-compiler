@@ -1,3 +1,5 @@
+import type { ScratchTarget } from "@scratch-compiler/types";
+
 const RESERVED = new Set([
   "await",
   "break",
@@ -65,5 +67,21 @@ export function sanitizeIdentifier(name: string): string {
   if (/^[0-9]/.test(camel)) camel = `_${camel}`;
   if (RESERVED.has(camel)) camel = `_${camel}`;
   return camel;
+}
+
+export function resolveTargetIdentifier(
+  target: ScratchTarget,
+  spriteVar: string,
+  name: string,
+  id: string | null,
+  kind: "variable" | "list",
+): string {
+  const entries = kind === "variable" ? target.variables : target.lists;
+  const isLocal =
+    !target.isStage &&
+    id !== null &&
+    Object.prototype.hasOwnProperty.call(entries ?? {}, id);
+  const identifier = sanitizeIdentifier(name);
+  return isLocal ? `${spriteVar}_${identifier}` : identifier;
 }
 
