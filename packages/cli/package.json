@@ -31,6 +31,7 @@
     "scratch-compile": "dist/cli.js"
   },
   "scripts": {
+    "prebuild": "pnpm --filter @scratch-compiler/types run build",
     "build": "tsc",
     "start": "node dist/cli.js"
   },
