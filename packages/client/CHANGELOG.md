@@ -1,5 +1,15 @@
 # @scratch-compiler/client
 
+## 1.1.0
+
+### Minor Changes
+
+- c8044ce: Add a custom prompt component and support Scratch ask-and-wait blocks.
+
+### Patch Changes
+
+- cf9d174: Build shared types before building the CLI and client packages.
+
 ## 1.0.0
 
 ### Major Changes

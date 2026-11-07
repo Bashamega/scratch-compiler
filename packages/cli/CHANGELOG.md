@@ -1,5 +1,16 @@
 # @scratch-compiler/cli
 
+## 2.1.0
+
+### Minor Changes
+
+- c8044ce: Add a custom prompt component and support Scratch ask-and-wait blocks.
+
+### Patch Changes
+
+- 33f0787: Support the documented `--file` and `--output` command-line options.
+- cf9d174: Build shared types before building the CLI and client packages.
+
 ## 2.0.0
 
 ### Major Changes
