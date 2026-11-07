@@ -35,6 +35,7 @@
     "konva": "^10.2.3"
   },
   "scripts": {
+    "prebuild": "pnpm --filter @scratch-compiler/types run build",
     "build": "pnpm run build:dist && pnpm run build:cli-bundle",
     "build:dist": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/index.js --format=esm --target=es2020",
     "build:cli-bundle": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=../cli/static/src/engine.min.js --format=esm --target=es2020",
