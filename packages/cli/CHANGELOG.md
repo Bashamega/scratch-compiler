@@ -1,5 +1,15 @@
 # @scratch-compiler/cli
 
+## 3.0.0
+
+### Major Changes
+
+- 06c4ec6: Add support for operator "and"
+
+### Minor Changes
+
+- 9eab1e0: Add support for is touching color function
+
 ## 2.1.0
 
 ### Minor Changes

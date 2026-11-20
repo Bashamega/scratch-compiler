@@ -1,5 +1,11 @@
 # @scratch-compiler/client
 
+## 1.2.0
+
+### Minor Changes
+
+- 9eab1e0: Add support for is touching color function
+
 ## 1.1.0
 
 ### Minor Changes
