@@ -151,6 +151,11 @@ export function generateOperatorBlockCode(
       const op2 = resolveOperandExpression(target, spriteVar, block, "OPERAND2");
       return `(${op1} == ${op2})`;
     }
+    case "operator_and": {
+      const op1 = resolveOperandExpression(target, spriteVar, block, "OPERAND1");
+      const op2 = resolveOperandExpression(target, spriteVar, block, "OPERAND2");
+      return `(${op1} && ${op2})`;
+    }
     default:
       return null;
   }
