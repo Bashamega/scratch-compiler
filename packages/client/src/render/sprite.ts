@@ -6,6 +6,21 @@ import * as events from "../blocks/events";
 import { loadCostumeImage } from "./costumeImage";
 import type { ScratchEventHandler } from "../events/eventBus";
 
+function colorToRgb(color: string): [number, number, number] | null {
+  if (!CSS.supports("color", color)) return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return null;
+
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
+  return [red, green, blue];
+}
+
 export class Sprite {
   data: ScratchTarget;
   images: HTMLImageElement[] = [];
@@ -339,6 +354,73 @@ export class Sprite {
       r2.y > r1.y + r1.height ||
       r2.y + r2.height < r1.y
     );
+  }
+
+  isTouchingColor(color: string): boolean {
+    if (!this.stage || !this.data.visible || !this.isReady) return false;
+
+    const rgb = colorToRgb(color);
+    if (!rgb) return false;
+
+    const width = this.stage.logicalWidth;
+    const height = this.stage.logicalHeight;
+    const rect = this.konvaNode.getClientRect();
+    const left = Math.max(0, Math.floor(rect.x));
+    const top = Math.max(0, Math.floor(rect.y));
+    const right = Math.min(width, Math.ceil(rect.x + rect.width));
+    const bottom = Math.min(height, Math.ceil(rect.y + rect.height));
+    if (right <= left || bottom <= top) return false;
+
+    const canvasConfig = {
+      x: left,
+      y: top,
+      width: right - left,
+      height: bottom - top,
+      pixelRatio: 1,
+    };
+    const wasVisible = this.konvaNode.visible();
+    let sceneCanvas: HTMLCanvasElement;
+    this.konvaNode.visible(false);
+    try {
+      sceneCanvas = this.stage.konvaStage.toCanvas(canvasConfig);
+    } finally {
+      this.konvaNode.visible(wasVisible);
+    }
+
+    const spriteCanvas = this.konvaNode.toCanvas(canvasConfig);
+    const sceneContext = sceneCanvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+    const spriteContext = spriteCanvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+    if (!sceneContext || !spriteContext) return false;
+
+    const scenePixels = sceneContext.getImageData(
+      0,
+      0,
+      canvasConfig.width,
+      canvasConfig.height,
+    ).data;
+    const spritePixels = spriteContext.getImageData(
+      0,
+      0,
+      canvasConfig.width,
+      canvasConfig.height,
+    ).data;
+
+    for (let index = 0; index < scenePixels.length; index += 4) {
+      if (
+        spritePixels[index + 3] > 0 &&
+        scenePixels[index + 3] > 0 &&
+        scenePixels[index] === rgb[0] &&
+        scenePixels[index + 1] === rgb[1] &&
+        scenePixels[index + 2] === rgb[2]
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

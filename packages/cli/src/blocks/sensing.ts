@@ -7,8 +7,9 @@ function resolveQuestionExpression(
   target: ScratchTarget,
   block: ScratchBlock,
   spriteVar: string,
+  inputName = "QUESTION",
 ): string {
-  const input = block.inputs["QUESTION"];
+  const input = block.inputs[inputName];
   if (!Array.isArray(input)) return JSON.stringify("");
 
   const value = input[1];
@@ -88,6 +89,13 @@ export function generateSensingBlockCode(
       );
       return `${spriteVar}.isTouching(${JSON.stringify(touchingObject)})`;
     }
+    case "sensing_touchingcolor":
+      return `${spriteVar}.isTouchingColor(${resolveQuestionExpression(
+        target,
+        block,
+        spriteVar,
+        "COLOR",
+      )})`;
     default:
       return null;
   }
