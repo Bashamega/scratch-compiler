@@ -9,9 +9,11 @@ import { MonitorOverlay } from "./monitorOverlay";
 import { loadCostumeImage } from "./costumeImage";
 import { ScratchEventBus, type ScratchEventHandler } from "../events/eventBus";
 import { AskAndWaitComponent } from "../components/ask-and-wait";
+import { SoundPlayer } from "./sound";
 
 export class Stage {
   stage: ScratchTarget;
+  private soundPlayer: SoundPlayer;
   currentCostume: ScratchCostume;
   konvaStage: KonvaStage;
   backdropLayer: KonvaLayer;
@@ -28,6 +30,7 @@ export class Stage {
   constructor(data: ScratchTarget, container: HTMLDivElement | string) {
     if (!data.isStage) throw new Error("Please pass a stage not sprite");
     this.stage = data;
+    this.soundPlayer = new SoundPlayer(data);
     this.currentCostume = data.costumes[data.currentCostume ?? 0];
 
     this.logicalWidth = SCRATCH_STAGE_WIDTH;
@@ -127,6 +130,18 @@ export class Stage {
     if (!costume) throw new Error("This costume doesn't exist");
     this.currentCostume = costume;
     this.draw(); // auto draw after change
+  }
+
+  setVolume(volume: number) {
+    this.soundPlayer.setVolume(volume);
+  }
+
+  playSound(soundName: string): Promise<void> {
+    return this.soundPlayer.play(soundName);
+  }
+
+  playSoundUntilDone(soundName: string): Promise<void> {
+    return this.soundPlayer.play(soundName);
   }
 
   /**

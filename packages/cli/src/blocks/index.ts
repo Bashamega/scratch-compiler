@@ -4,4 +4,5 @@ export * from "./motion";
 export * from "./control";
 export * from "./looks";
 export * from "./sensing";
+export * from "./sound";
 export * from "./utils";

@@ -1,6 +1,7 @@
 import type {
   ScratchCostume,
   ScratchProject,
+  ScratchSound,
   ScratchTarget,
 } from "@scratch-compiler/types";
 import { copyFile, mkdir, readdir, writeFile } from "fs/promises";
@@ -90,11 +91,14 @@ function findSprites(project: ScratchProject): ScratchTarget[] {
 function generateStageCtorCode(stageTarget?: ScratchTarget): string {
   if (!stageTarget) return "null";
   const costumesCode = generateCostumesArrayCode(stageTarget.costumes ?? []);
+  const soundsCode = generateSoundsArrayCode(stageTarget.sounds ?? []);
 
   // Add all fields as object properties, using JSON.stringify for string values, and default values as appropriate.
   const objFields: string[] = [];
   objFields.push(`name: ${JSON.stringify(stageTarget.name)}`);
   objFields.push(`costumes: [${costumesCode}]`);
+  objFields.push(`sounds: [${soundsCode}]`);
+  objFields.push(`volume: ${typeof stageTarget.volume === "number" ? stageTarget.volume : 100}`);
   objFields.push(`currentCostume: ${stageTarget.currentCostume ?? 0}`);
   objFields.push(`isStage: true`);
 
@@ -124,10 +128,13 @@ function generateSpritesCode(sprites: ScratchTarget[]): {
   const spritesCode = sprites
     .map((sprite) => {
       const costumesCode = generateCostumesArrayCode(sprite.costumes ?? []);
+      const soundsCode = generateSoundsArrayCode(sprite.sounds ?? []);
       // Add all sprite properties as object fields
       const objFields: string[] = [];
       objFields.push(`name: ${JSON.stringify(sprite.name)}`);
       objFields.push(`costumes: [${costumesCode}]`);
+      objFields.push(`sounds: [${soundsCode}]`);
+      objFields.push(`volume: ${typeof sprite.volume === "number" ? sprite.volume : 100}`);
       objFields.push(`currentCostume: ${sprite.currentCostume ?? 0}`);
       objFields.push(`isStage: false`);
       objFields.push(`x: ${typeof sprite.x === "number" ? sprite.x : 0}`);
@@ -324,6 +331,24 @@ function generateCostumesArrayCode(costumes: ScratchCostume[]): string {
   rotationCenterX: ${typeof costume.rotationCenterX === "number" ? costume.rotationCenterX : 0},
   rotationCenterY: ${typeof costume.rotationCenterY === "number" ? costume.rotationCenterY : 0},
   bitmapResolution: ${typeof costume.bitmapResolution === "number" ? costume.bitmapResolution : 1},
+}`,
+    )
+    .join(", ");
+}
+
+/** Generate the code string for a sounds array. */
+function generateSoundsArrayCode(sounds: ScratchSound[]): string {
+  return sounds
+    .map(
+      (sound) =>
+        `{
+  name: ${JSON.stringify(sound.name)},
+  assetId: ${JSON.stringify(sound.assetId)},
+  md5ext: ${JSON.stringify(sound.md5ext)},
+  dataFormat: ${JSON.stringify(sound.dataFormat)},
+  format: ${JSON.stringify(sound.format)},
+  rate: ${typeof sound.rate === "number" ? sound.rate : 22050},
+  sampleCount: ${typeof sound.sampleCount === "number" ? sound.sampleCount : 0},
 }`,
     )
     .join(", ");

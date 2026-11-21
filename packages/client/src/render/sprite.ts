@@ -5,6 +5,7 @@ import { Image as KonvaImage } from "konva/lib/shapes/Image";
 import * as events from "../blocks/events";
 import { loadCostumeImage } from "./costumeImage";
 import type { ScratchEventHandler } from "../events/eventBus";
+import { SoundPlayer } from "./sound";
 
 function colorToRgb(color: string): [number, number, number] | null {
   if (!CSS.supports("color", color)) return null;
@@ -23,6 +24,7 @@ function colorToRgb(color: string): [number, number, number] | null {
 
 export class Sprite {
   data: ScratchTarget;
+  private soundPlayer: SoundPlayer;
   images: HTMLImageElement[] = [];
   konvaNode: KonvaImage;
   private isReady = false;
@@ -138,6 +140,7 @@ export class Sprite {
 
   constructor(data: ScratchTarget) {
     this.data = data;
+    this.soundPlayer = new SoundPlayer(data);
     this.konvaNode = new KonvaImage({
       name: data.name,
       image: new Image()
@@ -499,6 +502,18 @@ export class Sprite {
     if (this.stage) {
       this.draw(this.stage);
     }
+  }
+
+  setVolume(volume: number) {
+    this.soundPlayer.setVolume(volume);
+  }
+
+  playSound(soundName: string): Promise<void> {
+    return this.soundPlayer.play(soundName);
+  }
+
+  playSoundUntilDone(soundName: string): Promise<void> {
+    return this.soundPlayer.play(soundName);
   }
 
   private turnBy(delta: number) {
