@@ -1,5 +1,11 @@
 # @scratch-compiler/client
 
+## 1.3.0
+
+### Minor Changes
+
+- 8e1679b: Add support for sound_play, sound_playuntildone, sound_setvolumeto
+
 ## 1.2.0
 
 ### Minor Changes
