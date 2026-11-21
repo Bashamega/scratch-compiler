@@ -1,5 +1,11 @@
 # @scratch-compiler/cli
 
+## 3.1.0
+
+### Minor Changes
+
+- 8e1679b: Add support for sound_play, sound_playuntildone, sound_setvolumeto
+
 ## 3.0.0
 
 ### Major Changes
